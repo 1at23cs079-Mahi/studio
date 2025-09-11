@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, History, Scale, Search, Languages } from 'lucide-react';
+import { FileText, History, Scale, Search, Languages, Mic } from 'lucide-react';
 
 interface CommandMenuProps {
     input: string;
@@ -15,6 +15,7 @@ const commands = [
     { name: 'analyze', description: 'Analyze the attached document', icon: <Scale className="h-4 w-4"/>, example: '/analyze' },
     { name: 'search', description: 'Search for case law about...', icon: <Search className="h-4 w-4"/>, example: '/search for cases on...' },
     { name: 'translate', description: 'Translate text to another language', icon: <Languages className="h-4 w-4"/>, example: '/translate to Hindi Hello World' },
+    { name: 'transcribe', description: 'Transcribe an attached audio file', icon: <Mic className="h-4 w-4"/>, example: '/transcribe' },
 ];
 
 export function CommandMenu({ input, setInput }: CommandMenuProps) {

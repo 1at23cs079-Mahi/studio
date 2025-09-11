@@ -16,7 +16,6 @@ import {
   X,
   Send,
   User,
-  MoreHorizontal,
 } from 'lucide-react';
 import { 
   chat, 
@@ -51,26 +50,51 @@ type Message = {
 
 // Memoize the message component to prevent re-renders
 const MemoizedMessage = memo(function Message({ message }: { message: Message }) {
+  const { toast } = useToast();
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(message.content);
+    toast({
+      description: 'Copied to clipboard!',
+    });
+  };
+
   const renderContent = (message: Message) => {
     if (message.searchResult) {
       return <SearchResultTable result={message.searchResult} />;
     }
     // Simple check for list formatting
-    if (message.content.includes('\n- ')) {
-      const parts = message.content.split('\n');
-      return (
-        <div className="space-y-2">
-          {parts.map((part, index) => {
+    if (message.content.includes('\n- ') || message.content.match(/\n\d+\./)) {
+        const parts = message.content.split('\n').filter(p => p.trim() !== '');
+        let isList = false;
+        const listItems = parts.map((part, index) => {
+            const isListItem = part.startsWith('- ') || part.match(/^\d+\.\s/);
+            if (isListItem) isList = true;
+            
             if (part.startsWith('- ')) {
-              return <li key={index} className="ml-4 list-disc">{part.substring(2)}</li>;
+              return <li key={index}>{part.substring(2)}</li>;
             }
              if (part.match(/^\d+\.\s/)) {
-              return <li key={index} className="ml-4 list-decimal">{part.substring(part.indexOf(' ') + 1)}</li>;
+              return <li key={index}>{part.substring(part.indexOf('.') + 2)}</li>;
             }
             return <p key={index}>{part}</p>;
-          })}
-        </div>
-      );
+        });
+
+        if (isList) {
+             return (
+                <div className="space-y-2">
+                    {parts.map((part, index) => {
+                         if (part.startsWith('- ')) {
+                            return <ul className="list-disc list-outside pl-4" key={index}><li>{part.substring(2)}</li></ul>;
+                         }
+                         if (part.match(/^\d+\.\s/)) {
+                             return <ol className="list-decimal list-outside pl-4" key={index}><li>{part.substring(part.indexOf('.') + 2)}</li></ol>;
+                         }
+                         return <p key={index}>{part}</p>
+                    })}
+                </div>
+             );
+        }
     }
     return <p>{message.content}</p>;
   }
@@ -101,8 +125,7 @@ const MemoizedMessage = memo(function Message({ message }: { message: Message })
             </div>
         )}
          <div className="flex items-center justify-end gap-2 mt-2 text-muted-foreground">
-          <Button variant="ghost" size="icon" className="h-6 w-6"><Copy className="h-3 w-3"/></Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6"><MoreHorizontal className="h-3 w-3"/></Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopy}><Copy className="h-3 w-3"/></Button>
         </div>
       </div>
        {message.role === 'user' && (
