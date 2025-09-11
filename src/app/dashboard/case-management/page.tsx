@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -58,6 +58,72 @@ type Message = {
   timeline?: string;
   searchResult?: SearchCaseLawOutput;
 };
+
+// Memoize the message component to prevent re-renders
+const MemoizedMessage = memo(function Message({ message }: { message: Message }) {
+  const renderContent = (message: Message) => {
+    if (message.searchResult) {
+      return <SearchResultTable result={message.searchResult} />;
+    }
+    // Simple check for list formatting
+    if (message.content.includes('\n- ')) {
+      const parts = message.content.split('\n');
+      return (
+        <div className="space-y-2">
+          {parts.map((part, index) => {
+            if (part.startsWith('- ')) {
+              return <li key={index} className="ml-4 list-disc">{part.substring(2)}</li>;
+            }
+             if (part.match(/^\d+\.\s/)) {
+              return <li key={index} className="ml-4 list-decimal">{part.substring(part.indexOf(' ') + 1)}</li>;
+            }
+            return <p key={index}>{part}</p>;
+          })}
+        </div>
+      );
+    }
+    return <p>{message.content}</p>;
+  }
+
+  return (
+    <div className={`flex items-start gap-4 ${message.role === 'user' ? 'justify-end' : ''}`}>
+      {message.role === 'model' && (
+        <Avatar className="w-8 h-8 border">
+          <AvatarFallback><Scale className="w-4 h-4"/></AvatarFallback>
+        </Avatar>
+      )}
+      <div className={`max-w-2xl rounded-lg px-4 py-3 ${
+        message.role === 'user'
+          ? 'bg-primary text-primary-foreground'
+          : 'bg-muted'
+      }`}>
+        <div className="prose prose-sm max-w-none text-sm text-foreground">
+          {renderContent(message)}
+        </div>
+        {message.citations && message.citations.length > 0 && (
+           <div className="mt-4">
+              <h4 className="font-semibold text-xs mb-1">Citations</h4>
+              <ul className="list-disc pl-5 space-y-1 text-xs">
+                {message.citations.map((c: string, i: number) => (
+                  <li key={i}>{c}</li>
+                ))}
+              </ul>
+            </div>
+        )}
+         <div className="flex items-center justify-end gap-2 mt-2 text-muted-foreground">
+          <Button variant="ghost" size="icon" className="h-6 w-6"><Copy className="h-3 w-3"/></Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6"><MoreHorizontal className="h-3 w-3"/></Button>
+        </div>
+      </div>
+       {message.role === 'user' && (
+        <Avatar className="w-8 h-8 border">
+          <AvatarFallback><User className="w-4 h-4"/></AvatarFallback>
+        </Avatar>
+      )}
+    </div>
+  );
+});
+
 
 export default function CaseManagementPage() {
   const { toast } = useToast();
@@ -222,30 +288,6 @@ export default function CaseManagementPage() {
     executeTask(input, file);
   }
 
-  const renderContent = (message: Message) => {
-    if (message.searchResult) {
-      return <SearchResultTable result={message.searchResult} />;
-    }
-    // Simple check for list formatting
-    if (message.content.includes('\n- ')) {
-      const parts = message.content.split('\n');
-      return (
-        <div className="space-y-2">
-          {parts.map((part, index) => {
-            if (part.startsWith('- ')) {
-              return <li key={index} className="ml-4 list-disc">{part.substring(2)}</li>;
-            }
-             if (part.match(/^\d+\.\s/)) {
-              return <li key={index} className="ml-4 list-decimal">{part.substring(part.indexOf(' ') + 1)}</li>;
-            }
-            return <p key={index}>{part}</p>;
-          })}
-        </div>
-      );
-    }
-    return <p>{message.content}</p>;
-  }
-
   return (
     <div className="flex flex-col h-[calc(100vh_-_6rem)]">
       <main className="flex-1 overflow-y-auto p-4 md:p-6">
@@ -257,41 +299,7 @@ export default function CaseManagementPage() {
         ) : (
           <div className="space-y-6">
             {messages.map((message, index) => (
-              <div key={index} className={`flex items-start gap-4 ${message.role === 'user' ? 'justify-end' : ''}`}>
-                {message.role === 'model' && (
-                  <Avatar className="w-8 h-8 border">
-                    <AvatarFallback><Scale className="w-4 h-4"/></AvatarFallback>
-                  </Avatar>
-                )}
-                <div className={`max-w-2xl rounded-lg px-4 py-3 ${
-                  message.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted'
-                }`}>
-                  <div className="prose prose-sm max-w-none text-sm text-foreground">
-                    {renderContent(message)}
-                  </div>
-                  {message.citations && message.citations.length > 0 && (
-                     <div className="mt-4">
-                        <h4 className="font-semibold text-xs mb-1">Citations</h4>
-                        <ul className="list-disc pl-5 space-y-1 text-xs">
-                          {message.citations.map((c: string, i: number) => (
-                            <li key={i}>{c}</li>
-                          ))}
-                        </ul>
-                      </div>
-                  )}
-                   <div className="flex items-center justify-end gap-2 mt-2 text-muted-foreground">
-                    <Button variant="ghost" size="icon" className="h-6 w-6"><Copy className="h-3 w-3"/></Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6"><MoreHorizontal className="h-3 w-3"/></Button>
-                  </div>
-                </div>
-                 {message.role === 'user' && (
-                  <Avatar className="w-8 h-8 border">
-                    <AvatarFallback><User className="w-4 h-4"/></AvatarFallback>
-                  </Avatar>
-                )}
-              </div>
+              <MemoizedMessage key={index} message={message} />
             ))}
              {isLoading && (
               <div className="flex items-start gap-4">
