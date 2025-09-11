@@ -34,10 +34,10 @@ function QuickAccessTile({
   href,
 }: QuickAccessTileProps) {
   return (
-    <Link href={href} className="block hover:bg-muted/50 rounded-lg transition-all">
-      <Card className="h-full border-2 border-transparent hover:border-primary/50 hover:shadow-lg">
+    <Link href={href} className="block group">
+      <Card className="h-full border-2 border-transparent transition-all duration-300 ease-in-out group-hover:border-primary/50 group-hover:shadow-2xl group-hover:-translate-y-1 transform">
         <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-2">
-          <div className="bg-primary/10 p-3 rounded-full">
+          <div className="bg-primary/10 p-3 rounded-full transition-all duration-300 group-hover:scale-110">
             <Icon className="h-6 w-6 text-primary" />
           </div>
           <CardTitle className="text-lg font-headline">{title}</CardTitle>
@@ -154,7 +154,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="flex-1 space-y-8">
+    <div className="flex-1 space-y-8 animate-fade-in">
       <div className="space-y-2">
         <h2 className="text-3xl font-bold tracking-tight font-headline">
           {welcome.replace('Advocate', name).replace('Student', name)}
@@ -164,7 +164,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div>
+      <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
         <h3 className="text-xl font-semibold font-headline mb-4">
           Quick Access
         </h3>
@@ -191,7 +191,7 @@ export default function DashboardPage() {
       </div>
 
       { (role === 'advocate' || role === 'student') && (
-        <div>
+        <div className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
             <h3 className="text-xl font-semibold font-headline mb-4">
             Recent Activity
             </h3>

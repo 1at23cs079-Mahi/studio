@@ -38,7 +38,7 @@ export default function LoginPage() {
     <form action={loginWithRole}>
       <input type="hidden" name="role" value={role} />
       <button type="submit" className="w-full h-full text-left">
-        <Card className="hover:border-primary hover:bg-muted/30 transition-all duration-200 ease-in-out h-full shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+        <Card className="hover:border-primary hover:bg-muted/30 transition-all duration-300 ease-in-out h-full shadow-lg hover:shadow-2xl transform hover:-translate-y-2">
           <CardHeader className="flex-row items-center gap-4">
             <div className="bg-primary/10 p-4 rounded-full">
               <Icon className="w-8 h-8 text-primary" />
@@ -47,7 +47,7 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">{description}</p>
-            <div className="flex items-center text-primary font-semibold">
+            <div className="flex items-center text-primary font-semibold group-hover:translate-x-1 transition-transform duration-300">
               <span>Continue as {title}</span>
               <ArrowRight className="ml-2 h-5 w-5" />
             </div>
@@ -59,7 +59,7 @@ export default function LoginPage() {
 
   return (
     <main className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-background to-primary/10">
-      <div className="w-full max-w-4xl mx-auto">
+      <div className="w-full max-w-4xl mx-auto animate-fade-in">
         <div className="text-center mb-10">
           <Logo iconClassName="size-16 text-primary mx-auto" textClassName="text-6xl" />
           <p className="mt-4 text-2xl font-headline">
