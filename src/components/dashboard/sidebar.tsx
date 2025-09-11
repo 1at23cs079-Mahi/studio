@@ -10,10 +10,11 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 import {
-  Search,
-  FileUp,
-  Briefcase,
-  ShieldCheck,
+  Database,
+  Upload,
+  Users,
+  LineChart,
+  GitBranch,
   LogOut,
   Settings,
   LayoutDashboard,
@@ -37,10 +38,11 @@ export function DashboardSidebar() {
 
   const menuItems = [
     { href: `/dashboard?${queryString}`, label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
-    { href: `#`, label: 'Search Judgments', icon: Search, tooltip: 'Search Judgments' },
-    { href: '#', label: 'Upload Document', icon: FileUp, tooltip: 'Upload & Analyze' },
-    { href: '#', label: 'My Cases', icon: Briefcase, tooltip: 'My Cases' },
-    { href: '#', label: 'Compliance Audit', icon: ShieldCheck, tooltip: 'Compliance Audit' },
+    { href: `#`, label: 'Database Sources', icon: Database, tooltip: 'Database Sources' },
+    { href: '#', label: 'Uploads', icon: Upload, tooltip: 'Uploads' },
+    { href: '#', label: 'Users', icon: Users, tooltip: 'Users' },
+    { href: '#', label: 'Analytics', icon: LineChart, tooltip: 'Analytics' },
+    { href: '#', label: 'Logs', icon: GitBranch, tooltip: 'Logs' },
   ];
 
   return (

@@ -8,113 +8,102 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/icons/logo';
 import { Input } from '@/components/ui/input';
+import Link from 'next/link';
 
 export default function LoginPage() {
   async function login(formData: FormData) {
     'use server';
-    const role = formData.get('role') || 'public';
-    const mode = formData.get('mode') || 'fast';
+    const role = 'advocate';
+    const mode = 'fast';
     redirect(`/dashboard?role=${role}&mode=${mode}`);
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
-      <div className="flex flex-col items-center gap-4 mb-8">
+    <main className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
+      <div className="hidden lg:flex flex-col items-center justify-center gap-8 bg-gradient-to-br from-[#0A2540] to-[#1D4ED8] text-white p-8">
         <Logo
-          iconClassName="text-primary size-12"
-          textClassName="text-primary text-5xl"
+          iconClassName="size-20"
+          textClassName="text-7xl"
         />
-        <p className="text-muted-foreground max-w-md text-center">
+        <p className="text-lg text-center max-w-sm">
           A multilingual, India-focused AI assistant for legal research, case
           review, drafting, compliance, and education.
         </p>
       </div>
-
-      <Card className="w-full max-w-md shadow-2xl">
-        <form action={login}>
-          <CardHeader>
-            <CardTitle className="font-headline">Welcome Back</CardTitle>
-            <CardDescription>
-              Select your role to tailor your experience.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="advocate@example.com"
-                required
-                defaultValue="advocate@example.com"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" required defaultValue="password" />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="role">Your Role</Label>
-              <Select name="role" defaultValue="advocate">
-                <SelectTrigger id="role" aria-label="Select role">
-                  <SelectValue placeholder="Select your role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="advocate">Advocate</SelectItem>
-                  <SelectItem value="student">Student</SelectItem>
-                  <SelectItem value="public">Public</SelectItem>
-                  <SelectItem value="court-admin" disabled>
-                    Court Admin
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Search Mode</Label>
-              <RadioGroup
-                defaultValue="fast"
-                name="mode"
-                className="flex gap-4 pt-2"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="fast" id="fast" />
-                  <Label htmlFor="fast" className="font-normal">
-                    Fast Q&amp;A
-                  </Label>
+      <div className="flex items-center justify-center p-8 bg-background">
+        <Card className="w-full max-w-md shadow-2xl">
+          <form action={login}>
+            <CardHeader>
+              <CardTitle className="font-headline text-2xl">Welcome back to LegalAi</CardTitle>
+              <CardDescription>
+                Enter your credentials to access your account.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email / Bar Council ID</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="advocate@example.com"
+                  required
+                  defaultValue="advocate@example.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <Link href="#" className="text-sm font-medium text-primary hover:underline">
+                    Forgot password?
+                  </Link>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="precise" id="precise" />
-                  <Label htmlFor="precise" className="font-normal">
-                    Precise Drafting
-                  </Label>
+                <Input id="password" name="password" type="password" required defaultValue="password" />
+              </div>
+
+            </CardContent>
+            <CardFooter className="flex-col items-stretch gap-4">
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
+                Login
+              </Button>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
                 </div>
-              </RadioGroup>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
-              Login
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
-      <p className="text-xs text-muted-foreground mt-8 text-center max-w-md">
-        ⚖ LegalAi Disclaimer: This is not legal advice. Please consult a licensed advocate for legal decisions.
-      </p>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                  <Button variant="outline">
+                      {/* Placeholder for Aadhaar icon */}
+                      <span className="mr-2">🇮🇳</span>
+                      Aadhaar OTP
+                  </Button>
+                  <Button variant="outline">
+                      {/* Placeholder for Google icon */}
+                      <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 23.4 172.9 61.9l-76.2 76.2C313.6 113.4 283.7 96 248 96c-88.8 0-160 71.3-160 160s71.2 160 160 160c98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 26.9 3.9 41.4z"></path></svg>
+                      Google
+                  </Button>
+              </div>
+
+               <p className="text-center text-sm text-muted-foreground">
+                New user?{' '}
+                <Link href="#" className="font-semibold text-primary hover:underline">
+                  Register as Advocate / Student / Public
+                </Link>
+              </p>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
     </main>
   );
 }

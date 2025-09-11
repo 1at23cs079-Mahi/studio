@@ -14,7 +14,7 @@ export function Logo({
     <div className={cn('flex items-center gap-2', className)}>
       <Scale className={cn('size-8', iconClassName)} />
       <h1 className={cn('text-2xl font-bold font-headline', textClassName)}>
-        Lexica
+        LegalAi
       </h1>
     </div>
   );

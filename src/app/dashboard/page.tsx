@@ -10,9 +10,23 @@ import {
   Briefcase,
   ShieldCheck,
   Search as SearchIcon,
-  Activity
+  Activity,
+  Upload,
+  Users,
+  Database,
+  LineChart,
+  GitBranch
 } from 'lucide-react';
 import Link from 'next/link';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Badge } from '@/components/ui/badge';
 
 type QuickAccessTileProps = {
   title: string;
@@ -21,118 +35,96 @@ type QuickAccessTileProps = {
   href: string;
 };
 
-function QuickAccessTile({ title, description, icon: Icon, href }: QuickAccessTileProps) {
+function StatusCard({ title, value, status }: { title: string, value: string, status: 'Healthy' | 'Errors' }) {
   return (
-    <Link href={href} className="block h-full">
-      <Card className="hover:border-primary hover:shadow-lg transition-all duration-200 h-full">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium font-body">{title}</CardTitle>
-          <Icon className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <p className="text-xs text-muted-foreground">{description}</p>
-        </CardContent>
-      </Card>
-    </Link>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+         <Badge variant={status === 'Healthy' ? 'default' : 'destructive'} className="bg-green-100 text-green-800 border-green-200">
+            {status}
+        </Badge>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+      </CardContent>
+    </Card>
   );
 }
+
 
 export default function DashboardPage({
   searchParams,
 }: {
   searchParams: { role?: string; mode?: string };
 }) {
-  const role = searchParams?.role || 'user';
-  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const recentLogs = [
+      { time: '2024-07-29 10:45:12', source: 'Supreme Court', status: 'Success', action: 'Indexed 15 docs' },
+      { time: '2024-07-29 10:42:01', source: 'Delhi High Court', status: 'Success', action: 'Indexed 8 docs' },
+      { time: '2024-07-29 10:35:54', source: 'NCLAT', status: 'Error', action: 'Connection failed' },
+      { time: '2024-07-29 10:30:19', source: 'Bombay High Court', status: 'Success', action: 'Indexed 22 docs' },
+    ];
 
-  const quickAccessTiles = [
-    {
-      title: 'Search Judgments',
-      description: 'Hybrid search with filters.',
-      icon: SearchIcon,
-      href: '#',
-    },
-    {
-      title: 'Upload Document',
-      description: 'Analyze & find precedents.',
-      icon: FileUp,
-      href: '#',
-    },
-    {
-      title: 'My Cases',
-      description: 'Access your private indices.',
-      icon: Briefcase,
-      href: '#',
-    },
-    {
-      title: 'Compliance Audit',
-      description: 'Run statute checks.',
-      icon: ShieldCheck,
-      href: '#',
-    },
-  ];
 
   return (
     <div className="flex-1 space-y-8">
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight font-headline">
-          Welcome, {capitalize(role)}
+          Admin Dashboard
         </h2>
       </div>
 
-      <div className="space-y-4">
-        <h3 className="text-xl font-semibold font-headline">Quick Actions</h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {quickAccessTiles.map((tile) => (
-                <QuickAccessTile key={tile.title} {...tile} />
-            ))}
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-            <CardHeader>
-                <CardTitle className="font-headline">Recent Activity</CardTitle>
-                <CardDescription>An overview of your recent actions in Lexica.</CardDescription>
-            </CardHeader>
-            <CardContent className="pl-2">
-                <div className="h-[350px] w-full flex items-center justify-center bg-secondary/50 rounded-md">
-                    <p className="text-muted-foreground">Activity chart will be displayed here.</p>
-                </div>
-            </CardContent>
-        </Card>
-        <Card className="col-span-4 lg:col-span-3">
-          <CardHeader>
-            <CardTitle className="font-headline">System Status</CardTitle>
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatusCard title="Ingestion Status" value="Healthy" status="Healthy" />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Indexed Docs</CardTitle>
+            <Database className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center">
-                <Activity className="h-4 w-4 mr-4 text-muted-foreground" />
-                <div className="ml-4 space-y-1">
-                  <p className="text-sm font-medium leading-none">Indexing Status</p>
-                  <p className="text-sm text-muted-foreground">Last updated: Just now</p>
-                </div>
-                <div className="ml-auto font-medium text-green-600">Healthy</div>
-            </div>
-            <div className="flex items-center">
-                <Briefcase className="h-4 w-4 mr-4 text-muted-foreground" />
-                <div className="ml-4 space-y-1">
-                  <p className="text-sm font-medium leading-none">Your Private Index</p>
-                  <p className="text-sm text-muted-foreground">42 cases, 1.2GB</p>
-                </div>
-                <div className="ml-auto font-medium">Active</div>
-            </div>
-             <div className="flex items-center">
-                <ShieldCheck className="h-4 w-4 mr-4 text-muted-foreground" />
-                <div className="ml-4 space-y-1">
-                  <p className="text-sm font-medium leading-none">Bare Acts</p>
-                  <p className="text-sm text-muted-foreground">IPC / BNS updated</p>
-                </div>
-                <div className="ml-auto font-medium text-green-600">Current</div>
-            </div>
+          <CardContent>
+            <div className="text-2xl font-bold">1,254,890</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Uploads</CardTitle>
+            <Upload className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">12</div>
           </CardContent>
         </Card>
       </div>
+
+      <div>
+        <h3 className="text-xl font-semibold font-headline mb-4">Recent Logs</h3>
+        <Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentLogs.map((log, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{log.time}</TableCell>
+                    <TableCell>{log.source}</TableCell>
+                    <TableCell>
+                      <Badge variant={log.status === 'Success' ? 'secondary' : 'destructive'} className={log.status === 'Success' ? 'bg-green-100 text-green-800' : ''}>
+                        {log.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{log.action}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+        </Card>
+      </div>
+
     </div>
   );
 }
