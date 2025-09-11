@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -19,6 +20,7 @@ import {
   Settings,
   LayoutDashboard,
   Briefcase,
+  BookOpen,
 } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import Link from 'next/link';
@@ -29,27 +31,35 @@ export function DashboardSidebar() {
   const searchParams = useSearchParams();
 
   const role = searchParams.get('role');
-  const mode = searchParams.get('mode');
   const name = searchParams.get('name');
   const email = searchParams.get('email');
 
   const preservedSearchParams = new URLSearchParams();
   if (role) preservedSearchParams.set('role', role);
-  if (mode) preservedSearchParams.set('mode', mode);
   if (name) preservedSearchParams.set('name', name);
   if (email) preservedSearchParams.set('email', email);
   const queryString = preservedSearchParams.toString();
+  
+  const allMenuItems = {
+    advocate: [
+        { href: `/dashboard?${queryString}`, label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
+        { href: `/dashboard/case-management?${queryString}`, label: 'LegalAI', icon: Briefcase, tooltip: 'LegalAI' },
+        { href: `#`, label: 'Database Sources', icon: Database, tooltip: 'Database Sources' },
+        { href: '#', label: 'Uploads', icon: Upload, tooltip: 'Uploads' },
+        { href: '#', label: 'Analytics', icon: LineChart, tooltip: 'Analytics' },
+    ],
+    student: [
+        { href: `/dashboard?${queryString}`, label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
+        { href: `/dashboard/case-management?${queryString}`, label: 'LegalAI', icon: BookOpen, tooltip: 'LegalAI' },
+    ],
+    public: [
+        { href: `/dashboard?${queryString}`, label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
+        { href: `/dashboard/case-management?${queryString}`, label: 'LegalAI', icon: Briefcase, tooltip: 'LegalAI' },
+    ]
+  };
 
+  const menuItems = allMenuItems[role as keyof typeof allMenuItems] || allMenuItems.public;
 
-  const menuItems = [
-    { href: `/dashboard?${queryString}`, label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
-    { href: `/dashboard/case-management?${queryString}`, label: 'LegalAI', icon: Briefcase, tooltip: 'LegalAI' },
-    { href: `#`, label: 'Database Sources', icon: Database, tooltip: 'Database Sources' },
-    { href: '#', label: 'Uploads', icon: Upload, tooltip: 'Uploads' },
-    { href: '#', label: 'Users', icon: Users, tooltip: 'Users' },
-    { href: '#', label: 'Analytics', icon: LineChart, tooltip: 'Analytics' },
-    { href: '#', label: 'Logs', icon: GitBranch, tooltip: 'Logs' },
-  ];
 
   return (
     <Sidebar collapsible="icon" className="group-data-[variant=inset]:bg-transparent">
