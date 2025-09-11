@@ -56,7 +56,7 @@ const roleConfig = {
         description: "Your AI-powered legal assistant is ready to help you win your next case.",
         quickAccess: [
             {
-                title: "Nova Legal AI",
+                title: "LegalAI",
                 description: "Draft petitions, summarize documents, and manage your cases with AI.",
                 icon: Briefcase,
                 command: ''
@@ -80,7 +80,7 @@ const roleConfig = {
         description: "Your AI study partner for acing your exams and moot courts.",
          quickAccess: [
             {
-                title: "Nova Legal AI",
+                title: "LegalAI",
                 description: "Understand complex legal concepts, summarize cases, and draft assignments.",
                 icon: BookOpen,
                 command: ''
@@ -104,7 +104,7 @@ const roleConfig = {
         description: "Your guide to understanding the Indian legal system.",
          quickAccess: [
             {
-                title: "Nova Legal AI",
+                title: "LegalAI",
                 description: "Ask legal questions, understand your rights, and get information on legal procedures.",
                 icon: Briefcase,
                 command: ''
@@ -222,3 +222,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

@@ -43,7 +43,7 @@ export function DashboardSidebar() {
 
   const menuItems = [
     { href: `/dashboard?${queryString}`, label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
-    { href: `/dashboard/case-management?${queryString}`, label: 'Nova Legal AI', icon: Briefcase, tooltip: 'Nova Legal AI' },
+    { href: `/dashboard/case-management?${queryString}`, label: 'LegalAI', icon: Briefcase, tooltip: 'LegalAI' },
     { href: `#`, label: 'Database Sources', icon: Database, tooltip: 'Database Sources' },
     { href: '#', label: 'Uploads', icon: Upload, tooltip: 'Uploads' },
     { href: '#', label: 'Users', icon: Users, tooltip: 'Users' },
@@ -90,3 +90,5 @@ export function DashboardSidebar() {
     </Sidebar>
   );
 }
+
+    

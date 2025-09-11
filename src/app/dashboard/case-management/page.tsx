@@ -323,7 +323,7 @@ export default function CaseManagementPage() {
         <form onSubmit={handleFormSubmit} className="relative">
           <CommandMenu input={input} setInput={setInput} />
           <Textarea
-            placeholder="Ask Lexica anything... or type '/' for commands"
+            placeholder="Ask LegalAI anything... or type '/' for commands"
             className="pr-28 pl-10 min-h-[48px] resize-none"
             value={input}
             onChange={e => setInput(e.target.value)}
@@ -419,3 +419,5 @@ function SearchResultTable({ result }: { result: SearchCaseLawOutput }) {
     </div>
   );
 }
+
+    

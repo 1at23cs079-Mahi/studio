@@ -5,7 +5,7 @@ import { PT_Sans, Space_Grotesk } from 'next/font/google';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'Lexica',
+  title: 'LegalAI',
   description: 'AI-powered legal assistant for India.',
 };
 
@@ -33,3 +33,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+    
