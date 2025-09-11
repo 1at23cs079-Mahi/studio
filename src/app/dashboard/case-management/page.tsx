@@ -6,7 +6,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -23,63 +22,49 @@ import {
   Mic,
   Settings,
   Languages,
-  Square,
-  CheckSquare,
+  Paperclip,
+  X,
+  Send,
+  User,
+  MoreHorizontal,
 } from 'lucide-react';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import {
-  draftLegalPetition,
-  DraftLegalPetitionInput,
-} from '@/ai/flows/draft-legal-petition';
-import {
-  summarizeLegalDocument,
-  SummarizeLegalDocumentInput,
-} from '@/ai/flows/summarize-legal-document';
-import {
-  generateCaseTimeline,
-  GenerateCaseTimelineInput,
-} from '@/ai/flows/generate-case-timeline';
 import { 
-  analyzeDocumentAndSuggestEdits, 
-  AnalyzeDocumentAndSuggestEditsInput 
-} from '@/ai/flows/analyze-document-and-suggest-edits';
-import {
-  transcribeAudio,
-  TranscribeAudioInput,
-} from '@/ai/flows/transcribe-audio';
-import {
-  translateText,
-  TranslateTextInput,
-} from '@/ai/flows/translate-text';
+  chat, 
+  ChatInput,
+  ChatOutput,
+} from '@/ai/flows/chat';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams } from 'next/navigation';
+import { Logo } from '@/components/icons/logo';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { CommandMenu } from '@/components/dashboard/command-menu';
+import { CaseLaw, SearchCaseLawOutput } from '@/ai/flows/search-case-law';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 
-type AiTask =
-  | 'draft-petition'
-  | 'summarize-document'
-  | 'generate-timeline'
-  | 'analyze-document';
+type Message = {
+  role: 'user' | 'model';
+  content: string;
+  citations?: string[];
+  analysisResults?: string;
+  timeline?: string;
+  searchResult?: SearchCaseLawOutput;
+};
 
 export default function CaseManagementPage() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<AiTask>('draft-petition');
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [inputText, setInputText] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
   const [file, setFile] = useState<File | null>(null);
 
   const [isRecording, setIsRecording] = useState(false);
@@ -100,9 +85,34 @@ export default function CaseManagementPage() {
   };
   
   const startRecording = async () => {
+    // aac, mp3, webm, ogg, wav
+    const mimeTypes = [
+      'audio/webm',
+      'audio/mp4',
+      'audio/ogg',
+      'audio/wav',
+      'audio/aac',
+    ];
+    let supportedMimeType: string | undefined;
+    for (const mimeType of mimeTypes) {
+      if (MediaRecorder.isTypeSupported(mimeType)) {
+        supportedMimeType = mimeType;
+        break;
+      }
+    }
+
+    if (!supportedMimeType) {
+      toast({
+        variant: 'destructive',
+        title: 'Audio Recording Not Supported',
+        description: 'Your browser does not support any of the required audio formats.',
+      });
+      return;
+    }
+    
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream);
+      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: supportedMimeType });
       audioChunksRef.current = [];
 
       mediaRecorderRef.current.ondataavailable = event => {
@@ -110,24 +120,12 @@ export default function CaseManagementPage() {
       };
 
       mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: supportedMimeType });
         const reader = new FileReader();
         reader.readAsDataURL(audioBlob);
         reader.onloadend = async () => {
           const base64Audio = reader.result as string;
-          try {
-            setIsLoading(true);
-            const response = await transcribeAudio({ audioDataUri: base64Audio });
-            setInputText(prev => prev + response.transcript);
-          } catch(e) {
-             toast({
-              variant: 'destructive',
-              title: 'Transcription Failed',
-              description: 'Could not transcribe the audio.',
-            });
-          } finally {
-            setIsLoading(false);
-          }
+          await executeTask(input, undefined, base64Audio);
         };
       };
 
@@ -150,335 +148,241 @@ export default function CaseManagementPage() {
     }
   };
 
-
-  const executeTask = async () => {
+  const executeTask = async (currentInput: string, attachedFile?: File, audioUri?: string) => {
+    if (!currentInput && !attachedFile && !audioUri) return;
+    
     setIsLoading(true);
-    setResult(null);
+    const userMessage: Message = { role: 'user', content: currentInput };
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setFile(null);
 
     try {
-      let response;
-      if (activeTab === 'draft-petition') {
-        const input: DraftLegalPetitionInput = {
-          query: inputText,
-          userRole: getRole(),
-        };
-        response = await draftLegalPetition(input);
-      } else if (
-        activeTab === 'summarize-document' ||
-        activeTab === 'analyze-document'
-      ) {
-        if (!file) {
-          toast({
-            variant: 'destructive',
-            title: 'No file selected',
-            description: 'Please upload a document to proceed.',
-          });
-          setIsLoading(false);
-          return;
-        }
+      let dataUri: string | undefined;
+      if (attachedFile) {
         const reader = new FileReader();
-        reader.readAsDataURL(file);
-        const dataUri = await new Promise<string>(resolve => {
+        reader.readAsDataURL(attachedFile);
+        dataUri = await new Promise<string>(resolve => {
           reader.onload = e => resolve(e.target?.result as string);
         });
-
-        if (activeTab === 'summarize-document') {
-          const input: SummarizeLegalDocumentInput = { documentDataUri: dataUri };
-          response = await summarizeLegalDocument(input);
-        } else {
-          const input: AnalyzeDocumentAndSuggestEditsInput = { documentDataUri: dataUri };
-          response = await analyzeDocumentAndSuggestEdits(input);
-        }
-
-      } else if (activeTab === 'generate-timeline') {
-        const input: GenerateCaseTimelineInput = { caseDetails: inputText };
-        response = await generateCaseTimeline(input);
       }
-      setResult(response);
-    } catch (error) {
+
+      const inputPayload: ChatInput = {
+        message: currentInput,
+        history: messages.map(m => ({role: m.role, content: m.content})),
+        userRole: getRole(),
+        documentDataUri: dataUri,
+        audioDataUri: audioUri,
+      };
+
+      const response = await chat(inputPayload);
+      const modelMessage: Message = { role: 'model', ...response };
+
+      setMessages(prev => [...prev, modelMessage]);
+
+    } catch (error: any) {
       console.error('AI task failed:', error);
+      const errorMessage : Message = {
+        role: 'model',
+        content: 'An error occurred: ' + error.message || 'Failed to complete the request. Please try again later.'
+      }
+      setMessages(prev => [...prev, errorMessage]);
       toast({
         variant: 'destructive',
         title: 'An error occurred',
-        description:
-          'Failed to complete the request. Please try again later.',
+        description: error.message || 'Failed to complete the request. Please try again later.',
       });
     } finally {
       setIsLoading(false);
     }
   };
+  
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    executeTask(input, file);
+  }
 
-  const handleTranslate = async (targetLanguage: string) => {
-    if (!result) return;
-    setIsLoading(true);
-    try {
-      let textToTranslate = '';
-       switch (activeTab) {
-        case 'draft-petition':
-          textToTranslate = result.draft;
-          break;
-        case 'summarize-document':
-          textToTranslate = result.summary;
-          break;
-        case 'generate-timeline':
-          textToTranslate = result.timeline;
-          break;
-        case 'analyze-document':
-          textToTranslate = result.analysisResults;
-          break;
-      }
-
-      const input: TranslateTextInput = { text: textToTranslate, targetLanguage };
-      const response = await translateText(input);
-
-       switch (activeTab) {
-        case 'draft-petition':
-          setResult({ ...result, draft: response.translatedText });
-          break;
-        case 'summarize-document':
-          setResult({ ...result, summary: response.translatedText });
-          break;
-        case 'generate-timeline':
-          setResult({ ...result, timeline: response.translatedText });
-          break;
-        case 'analyze-document':
-          setResult({ ...result, analysisResults: response.translatedText });
-          break;
-      }
-
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Translation Failed',
-        description: 'Could not translate the text.',
-      });
-    } finally {
-      setIsLoading(false);
+  const renderContent = (message: Message) => {
+    if (message.searchResult) {
+      return <SearchResultTable result={message.searchResult} />;
     }
-  };
-
-
-  const renderResult = () => {
-    if (!result) return null;
-
-    switch (activeTab) {
-      case 'draft-petition':
-        return (
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Drafted Petition</h3>
-            <pre className="bg-muted p-4 rounded-md whitespace-pre-wrap font-sans text-sm">
-              {result.draft}
-            </pre>
-            <h3 className="text-lg font-semibold mt-4 mb-2">Citations</h3>
-            <ul className="list-disc pl-5 space-y-1 text-sm">
-              {result.citations.map((c: string, i: number) => (
-                <li key={i}>{c}</li>
-              ))}
-            </ul>
-          </div>
-        );
-      case 'summarize-document':
-         return (
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Summary</h3>
-            <p className="text-sm whitespace-pre-wrap">{result.summary}</p>
-            <h3 className="text-lg font-semibold mt-4 mb-2">Citations</h3>
-             <ul className="list-disc pl-5 space-y-1 text-sm">
-              {result.citations.map((c: string, i: number) => (
-                <li key={i}>{c}</li>
-              ))}
-            </ul>
-          </div>
-        );
-      case 'generate-timeline':
-         return (
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Case Timeline</h3>
-            <p className="text-sm whitespace-pre-wrap">{result.timeline}</p>
-          </div>
-        );
-       case 'analyze-document':
-         return (
-            <div>
-                <h3 className="text-lg font-semibold mb-2">Analysis Results</h3>
-                <p className="text-sm whitespace-pre-wrap">{result.analysisResults}</p>
-            </div>
-         )
-      default:
-        return null;
-    }
-  };
-
-  const getTabContent = (tab: AiTask) => {
-    switch (tab) {
-      case 'draft-petition':
-      case 'generate-timeline':
-        return (
-          <Textarea
-            placeholder={
-              tab === 'draft-petition'
-                ? 'Describe the petition you want to draft...'
-                : 'Enter case details to generate a timeline...'
+    // Simple check for list formatting
+    if (message.content.includes('\n- ')) {
+      const parts = message.content.split('\n');
+      return (
+        <div className="space-y-2">
+          {parts.map((part, index) => {
+            if (part.startsWith('- ')) {
+              return <li key={index} className="ml-4 list-disc">{part.substring(2)}</li>;
             }
-            className="min-h-[150px] text-base"
-            value={inputText}
-            onChange={e => setInputText(e.target.value)}
-          />
-        );
-      case 'summarize-document':
-      case 'analyze-document':
-        return (
-          <div className="border border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-center h-[150px]">
-            <FileUp className="h-8 w-8 text-muted-foreground" />
-            <label
-              htmlFor="file-upload"
-              className="mt-4 text-sm font-medium text-primary hover:underline cursor-pointer"
-            >
-              {file ? file.name : 'Click to upload a document'}
-            </label>
-            <p className="text-xs text-muted-foreground mt-1">
-              PDF, DOCX, TXT up to 10MB
-            </p>
-            <input
-              id="file-upload"
-              type="file"
-              className="hidden"
-              onChange={handleFileChange}
-              accept=".pdf,.docx,.txt"
-            />
-          </div>
-        );
+             if (part.match(/^\d+\.\s/)) {
+              return <li key={index} className="ml-4 list-decimal">{part.substring(part.indexOf(' ') + 1)}</li>;
+            }
+            return <p key={index}>{part}</p>;
+          })}
+        </div>
+      );
     }
-  };
+    return <p>{message.content}</p>;
+  }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-      <Card className="lg:sticky top-24">
-        <CardHeader>
-          <CardTitle className="font-headline text-2xl">
-            Case Management
-          </CardTitle>
-          <CardDescription>
-            Your AI-powered legal assistant for research, drafting, and analysis.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs
-            value={activeTab}
-            onValueChange={value => {
-              setActiveTab(value as AiTask);
-              setResult(null);
-              setInputText('');
-              setFile(null);
-            }}
-          >
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
-              <TabsTrigger value="draft-petition" className="flex-col h-auto py-2">
-                <FileText className="h-5 w-5 mb-1" /> Draft
-              </TabsTrigger>
-              <TabsTrigger value="summarize-document" className="flex-col h-auto py-2">
-                <Scale className="h-5 w-5 mb-1" /> Summarize
-              </TabsTrigger>
-              <TabsTrigger value="generate-timeline" className="flex-col h-auto py-2">
-                <History className="h-5 w-5 mb-1" /> Timeline
-              </TabsTrigger>
-               <TabsTrigger value="analyze-document" className="flex-col h-auto py-2">
-                <Scale className="h-5 w-5 mb-1" /> Analyze
-              </TabsTrigger>
-            </TabsList>
-            <div className="mt-4">{getTabContent(activeTab)}</div>
-          </Tabs>
-
-          <div className="mt-4 space-y-2">
-            <Label>Mode</Label>
-            <Select defaultValue="case-review">
-              <SelectTrigger>
-                <SelectValue placeholder="Select a mode" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="opinion">Opinion</SelectItem>
-                <SelectItem value="case-review">Case Review</SelectItem>
-                <SelectItem value="educational">Educational</SelectItem>
-              </SelectContent>
-            </Select>
+    <div className="flex flex-col h-[calc(100vh_-_6rem)]">
+      <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        {messages.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center text-center">
+            <Logo iconClassName="size-16" textClassName="text-5xl" />
+            <p className="mt-4 text-muted-foreground">How can I help you today?</p>
           </div>
-        </CardContent>
-        <CardFooter className="flex-col items-stretch gap-4">
-          <div className="flex items-center gap-2">
-             <Button
-                onClick={executeTask}
-                disabled={isLoading}
-                className="w-full"
-              >
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isLoading ? 'Processing...' : 'Generate'}
-              </Button>
-               <Button
-                variant="outline"
+        ) : (
+          <div className="space-y-6">
+            {messages.map((message, index) => (
+              <div key={index} className={`flex items-start gap-4 ${message.role === 'user' ? 'justify-end' : ''}`}>
+                {message.role === 'model' && (
+                  <Avatar className="w-8 h-8 border">
+                    <AvatarFallback><Scale className="w-4 h-4"/></AvatarFallback>
+                  </Avatar>
+                )}
+                <div className={`max-w-2xl rounded-lg px-4 py-3 ${
+                  message.role === 'user'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted'
+                }`}>
+                  <div className="prose prose-sm max-w-none text-sm text-foreground">
+                    {renderContent(message)}
+                  </div>
+                  {message.citations && message.citations.length > 0 && (
+                     <div className="mt-4">
+                        <h4 className="font-semibold text-xs mb-1">Citations</h4>
+                        <ul className="list-disc pl-5 space-y-1 text-xs">
+                          {message.citations.map((c: string, i: number) => (
+                            <li key={i}>{c}</li>
+                          ))}
+                        </ul>
+                      </div>
+                  )}
+                   <div className="flex items-center justify-end gap-2 mt-2 text-muted-foreground">
+                    <Button variant="ghost" size="icon" className="h-6 w-6"><Copy className="h-3 w-3"/></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6"><MoreHorizontal className="h-3 w-3"/></Button>
+                  </div>
+                </div>
+                 {message.role === 'user' && (
+                  <Avatar className="w-8 h-8 border">
+                    <AvatarFallback><User className="w-4 h-4"/></AvatarFallback>
+                  </Avatar>
+                )}
+              </div>
+            ))}
+             {isLoading && (
+              <div className="flex items-start gap-4">
+                <Avatar className="w-8 h-8 border">
+                  <AvatarFallback><Scale className="w-4 h-4" /></AvatarFallback>
+                </Avatar>
+                <div className="max-w-2xl rounded-lg px-4 py-3 bg-muted flex items-center">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </main>
+
+      <div className="border-t bg-background px-4 py-3">
+        <form onSubmit={handleFormSubmit} className="relative">
+          <CommandMenu input={input} setInput={setInput} />
+          <Textarea
+            placeholder="Ask LegalAi anything... or type '/' for commands"
+            className="pr-28 pl-10 min-h-[48px] resize-none"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleFormSubmit(e);
+                }
+            }}
+          />
+          <div className="absolute top-1/2 -translate-y-1/2 left-3 flex items-center">
+             <label htmlFor="file-upload">
+              <Paperclip className="h-5 w-5 text-muted-foreground cursor-pointer" />
+            </label>
+            <input id="file-upload" type="file" className="hidden" onChange={handleFileChange}/>
+          </div>
+          <div className="absolute top-1/2 -translate-y-1/2 right-3 flex items-center gap-2">
+            <Button
+                type="button"
                 size="icon"
+                variant="ghost"
                 onClick={isRecording ? stopRecording : startRecording}
                 className={isRecording ? 'bg-red-500 hover:bg-red-600 text-white' : ''}
               >
-                {isRecording ? <CheckSquare className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              </Button>
-              <Button variant="outline" size="icon"><Settings/></Button>
+                <Mic className="h-5 w-5" />
+            </Button>
+            <Button type="submit" size="icon" disabled={isLoading || (!input && !file)}>
+              <Send className="h-5 w-5" />
+            </Button>
           </div>
-
-          <p className="text-center text-xs text-muted-foreground">
-            ⚖ LegalAi Disclaimer: This is not legal advice. Please consult a licensed advocate for legal decisions.
-          </p>
-
-        </CardFooter>
-      </Card>
-
-      <Card className="min-h-[60vh]">
-        <CardHeader className="flex flex-row items-center justify-between">
-           <CardTitle className="font-headline text-2xl">Output</CardTitle>
-           {result && (
-            <div className="flex items-center gap-2">
-                <Select onValueChange={handleTranslate}>
-                  <SelectTrigger className="w-auto gap-2">
-                    <Languages className="h-4 w-4" />
-                    <SelectValue placeholder="Translate" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Hindi">Hindi</SelectItem>
-                    <SelectItem value="Kannada">Kannada</SelectItem>
-                    <SelectItem value="Tamil">Tamil</SelectItem>
-                    <SelectItem value="Telugu">Telugu</SelectItem>
-                    <SelectItem value="Bengali">Bengali</SelectItem>
-                    <SelectItem value="Marathi">Marathi</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="ghost" size="icon" onClick={() => navigator.clipboard.writeText(JSON.stringify(result, null, 2))}><Copy className="h-4 w-4"/></Button>
-                <Button variant="ghost" size="icon"><Download className="h-4 w-4"/></Button>
-                <Button variant="ghost" size="icon"><Share2 className="h-4 w-4"/></Button>
-            </div>
-           )}
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center h-full min-h-[40vh] text-center">
-              <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-              <p className="text-muted-foreground">
-                Your request is being processed...
-              </p>
-            </div>
-          ) : result ? (
-            renderResult()
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full min-h-[40vh] text-center p-8">
-              <Scale className="h-16 w-16 text-muted-foreground/30 mb-4" />
-              <h3 className="text-lg font-semibold text-muted-foreground">
-                Your results will appear here.
-              </h3>
-              <p className="text-sm text-muted-foreground/80 mt-1">
-                Select a task and provide the necessary input to get started.
-              </p>
+        </form>
+         {file && (
+            <div className="mt-2 flex items-center gap-2 text-sm bg-muted/50 p-2 rounded-md">
+              <FileText className="h-4 w-4"/>
+              <span>{file.name}</span>
+              <Button variant="ghost" size="icon" className="h-6 w-6 ml-auto" onClick={() => setFile(null)}>
+                <X className="h-4 w-4"/>
+              </Button>
             </div>
           )}
-        </CardContent>
-      </Card>
+      </div>
+    </div>
+  );
+}
+
+function SearchResultTable({ result }: { result: SearchCaseLawOutput }) {
+  if (!result || result.results.length === 0) {
+    return <p>No case law results found.</p>;
+  }
+  return (
+    <div className="my-4">
+        <p className="text-sm mb-2">Found {result.results.length} relevant cases:</p>
+        <Card>
+            <Table>
+            <TableHeader>
+                <TableRow>
+                <TableHead>Case Title & Citation</TableHead>
+                <TableHead>Court</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {result.results.map(res => (
+                <TableRow key={res.id}>
+                    <TableCell>
+                    <div className="font-medium hover:underline">
+                        <Link href="#">{res.title}</Link>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                        {res.citation}
+                    </div>
+                    </TableCell>
+                    <TableCell>{res.court}</TableCell>
+                    <TableCell>{res.date}</TableCell>
+                    <TableCell>
+                    <Badge
+                        variant={
+                        res.status === 'Landmark'
+                            ? 'default'
+                            : 'secondary'
+                        }
+                    >
+                        {res.status}
+                    </Badge>
+                    </TableCell>
+                </TableRow>
+                ))}
+            </TableBody>
+            </Table>
+        </Card>
     </div>
   );
 }
