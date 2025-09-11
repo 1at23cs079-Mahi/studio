@@ -239,15 +239,9 @@ export default function CaseManagementPage() {
     if (!currentInput && !attachedFile && !audioUri) return;
     
     setIsLoading(true);
-
-    const isTranscription = currentInput === '/transcribe' && !!audioUri;
     
-    if (!isTranscription) {
-        const userMessage: Message = { role: 'user', content: currentInput };
-        setMessages(prev => [...prev, userMessage]);
-    } else {
-        setMessages(prev => [...prev, {role: 'user', content: '[Audio input being transcribed...]' }]);
-    }
+    const userMessage: Message = { role: 'user', content: currentInput };
+    setMessages(prev => [...prev, userMessage]);
     
     setInput('');
     setFile(null);
@@ -264,33 +258,23 @@ export default function CaseManagementPage() {
 
       const inputPayload: ChatInput = {
         message: currentInput,
-        history: messages.map(m => ({role: m.role, content: m.content})),
+        history: messages.map(m => ({
+          role: m.role,
+          content: [{ text: m.content }],
+        })),
         userRole: getRole(),
-        documentDataUri: dataUri,
-        audioDataUri: audioUri,
       };
 
       const response = await chat(inputPayload);
 
-      if (isTranscription) {
-        // Remove the "[Audio input...]" message
-        setMessages(prev => prev.slice(0, -1));
-        // Execute the transcribed text as a new command
-        await executeTask(response.content);
-      } else {
-        const modelMessage: Message = { role: 'model', ...response };
-        setMessages(prev => [...prev, modelMessage]);
-      }
+      const modelMessage: Message = { role: 'model', ...response };
+      setMessages(prev => [...prev, modelMessage]);
 
     } catch (error: any) {
       console.error('AI task failed:', error);
       const errorMessage : Message = {
         role: 'model',
         content: 'An error occurred: ' + error.message || 'Failed to complete the request. Please try again later.'
-      }
-       // If it was a transcription, remove the temporary message first
-      if (isTranscription) {
-        setMessages(prev => prev.slice(0, -1));
       }
       setMessages(prev => [...prev, errorMessage]);
       toast({
