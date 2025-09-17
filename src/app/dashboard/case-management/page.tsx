@@ -242,7 +242,7 @@ export default function CaseManagementPage() {
   };
   
   const getCommand = (input: string): { command: string, query: string } | null => {
-    const match = input.match(/^\/(\w+)\s*(.*)/);
+    const match = input.match(/^\/(\w+)\s*(.*)/s);
     if (match) {
         return { command: match[1], query: match[2].trim() };
     }
@@ -299,7 +299,7 @@ export default function CaseManagementPage() {
             break;
           case 'search':
             response = await searchCaseLaw({ query });
-            response.content = `Searching for: "${query}"`; // Placeholder text
+            response.content = `Here are the top 5 case law results for your query: "${query}"`;
             response.searchResult = response;
             break;
           case 'translate':
@@ -482,5 +482,7 @@ function SearchResultTable({ result }: { result: SearchCaseLawOutput }) {
     </div>
   );
 }
+
+    
 
     
