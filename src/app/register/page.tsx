@@ -59,7 +59,7 @@ export default function LoginPage() {
 
   return (
     <main className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-background to-primary/10">
-      <div className="w-full max-w-4xl mx-auto">
+      <div className="w-full max-w-4xl mx-auto animate-fade-in">
         <div className="text-center mb-10">
           <Logo iconClassName="size-16 text-primary mx-auto" textClassName="text-6xl" />
           <p className="mt-4 text-2xl font-headline">
