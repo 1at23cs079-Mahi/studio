@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -17,7 +18,7 @@ const AnalyzeDocumentAndSuggestEditsInputSchema = z.object({
     .string()
     .describe(
       "A legal document as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
-    ),
+    ).optional(),
 });
 export type AnalyzeDocumentAndSuggestEditsInput = z.infer<
   typeof AnalyzeDocumentAndSuggestEditsInputSchema
@@ -46,6 +47,7 @@ const analyzeDocumentAndSuggestEditsPrompt = ai.definePrompt({
   output: {schema: AnalyzeDocumentAndSuggestEditsOutputSchema},
   prompt: `You are a legal expert specializing in analyzing legal documents.
 
+{{#if documentDataUri}}
 You will use this document to identify clauses, suggest redline edits, and provide matching precedent for each flagged clause.
 
 Document: {{media url=documentDataUri}}
@@ -53,6 +55,9 @@ Document: {{media url=documentDataUri}}
 Analyze the document and provide the analysis results. Focus on potential issues, inconsistencies, and areas for improvement.
 
 Ensure that the analysis results include specific suggestions for redline edits and relevant precedent to support each suggestion.
+{{else}}
+Please upload a document to be analyzed. I cannot provide a review without a document.
+{{/if}}
 `,
 });
 
