@@ -121,7 +121,7 @@ export function DocumentReview() {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <main className="flex-1 overflow-y-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
       <div className="flex flex-col gap-4">
         <Card
           className={`flex-1 flex flex-col items-center justify-center p-6 border-2 border-dashed transition-colors duration-300 ${
@@ -202,7 +202,7 @@ export function DocumentReview() {
         </div>
       </div>
       <div className="flex flex-col">
-        <Card className="flex-1">
+        <Card className="flex-1 flex flex-col">
           <CardHeader className="flex flex-row items-center justify-between">
             <div className='space-y-1'>
                 <CardTitle>Analysis Result</CardTitle>
@@ -220,16 +220,16 @@ export function DocumentReview() {
               </Button>
             )}
           </CardHeader>
-          <CardContent className="h-full">
+          <CardContent className="flex-1 flex flex-col">
             {isLoading ? (
-              <div className="flex h-full items-center justify-center">
+              <div className="flex flex-1 items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : analysisResult ? (
-              <div className="prose prose-sm max-w-none text-sm text-foreground h-[calc(100vh_-_20rem)] overflow-y-auto">
+              <div className="prose prose-sm max-w-none text-sm text-foreground flex-1 overflow-y-auto">
                 <p>{analysisResult.content}</p>
               </div>
-            ) : null}
+            ) : <div className='flex-1'/>}
           </CardContent>
         </Card>
       </div>

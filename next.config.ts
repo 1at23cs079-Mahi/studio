@@ -30,6 +30,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  serverActions: {
+    bodySizeLimit: '10mb', // Increase body size limit for large file uploads
+  },
 };
 
 export default nextConfig;
