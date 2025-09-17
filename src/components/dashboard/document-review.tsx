@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  FileText,
   Loader2,
   Copy,
   UploadCloud,
@@ -19,19 +18,10 @@ import {
   FileCheck2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { summarizeLegalDocument } from '@/ai/flows/summarize-legal-document';
-import { analyzeDocumentAndSuggestEdits } from '@/ai/flows/analyze-document-and-suggest-edits';
+import { reviewDocument } from '@/ai/flows/review-document';
 
 type AnalysisResult = {
   content: string;
-  citations?: string[];
 };
 
 export function DocumentReview() {
@@ -41,9 +31,7 @@ export function DocumentReview() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(
     null
   );
-  const [reviewType, setReviewType] = useState<'summarize' | 'analyze'>(
-    'summarize'
-  );
+  const [prompt, setPrompt] = useState('');
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFileChange = (files: FileList | null) => {
@@ -85,6 +73,14 @@ export function DocumentReview() {
       });
       return;
     }
+    if (!prompt) {
+        toast({
+            variant: 'destructive',
+            title: 'No instruction provided',
+            description: 'Please provide an instruction for what to do with the document.',
+        });
+        return;
+    }
     setIsLoading(true);
     setAnalysisResult(null);
 
@@ -96,21 +92,11 @@ export function DocumentReview() {
         reader.readAsDataURL(file);
       });
 
-      let response: any;
-      if (reviewType === 'summarize') {
-        response = await summarizeLegalDocument({ documentDataUri: dataUri });
-        setAnalysisResult({
-          content: response.summary,
-          citations: response.citations,
-        });
-      } else {
-        response = await analyzeDocumentAndSuggestEdits({
-          documentDataUri: dataUri,
-        });
-        setAnalysisResult({
-          content: response.analysisResults,
-        });
-      }
+      const response = await reviewDocument({ documentDataUri: dataUri, prompt: prompt });
+      setAnalysisResult({
+        content: response.result,
+      });
+
     } catch (error: any) {
       console.error('Document review failed:', error);
       toast({
@@ -194,24 +180,18 @@ export function DocumentReview() {
             </div>
           )}
         </Card>
-        <div className="flex items-center gap-4">
-          <Select
-            value={reviewType}
-            onValueChange={(v) => setReviewType(v as 'summarize' | 'analyze')}
-            disabled={isLoading}
-          >
-            <SelectTrigger className="flex-1">
-              <SelectValue placeholder="Select review type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="summarize">Summarize Document</SelectItem>
-              <SelectItem value="analyze">Analyze & Suggest Edits</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col gap-2">
+            <Textarea 
+                placeholder="Tell me what to do with the document. For example: 'Summarize this document' or 'Extract the buyer, seller, and property address'."
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                disabled={isLoading}
+                className='min-h-[80px]'
+            />
           <Button
             onClick={executeReview}
-            disabled={!file || isLoading}
-            className="w-48"
+            disabled={!file || isLoading || !prompt}
+            className="w-full"
           >
             {isLoading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -248,19 +228,6 @@ export function DocumentReview() {
             ) : analysisResult ? (
               <div className="prose prose-sm max-w-none text-sm text-foreground h-[calc(100vh_-_20rem)] overflow-y-auto">
                 <p>{analysisResult.content}</p>
-                {analysisResult.citations &&
-                  analysisResult.citations.length > 0 && (
-                    <div className="mt-4">
-                      <h4 className="font-semibold text-xs mb-1">Citations</h4>
-                      <ul className="list-disc pl-5 space-y-1 text-xs">
-                        {analysisResult.citations.map(
-                          (c: string, i: number) => (
-                            <li key={i}>{c}</li>
-                          )
-                        )}
-                      </ul>
-                    </div>
-                  )}
               </div>
             ) : null}
           </CardContent>
