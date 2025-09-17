@@ -156,10 +156,10 @@ export function AssistantChat() {
 
   useEffect(() => {
     const command = searchParams.get('command');
-    if(command && command !== 'analyze' && command !== 'summarize') {
+    if (command && !['analyze', 'summarize', 'translate'].includes(command)) {
       setInput(`/${command}`);
     }
-  }, [searchParams])
+  }, [searchParams]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -294,7 +294,7 @@ export function AssistantChat() {
                  response.content = `No results found for "${query}"`;
             }
             break;
-          case 'translate':
+          case 'translate': {
             const [targetLanguage, ...textToTranslate] = query.split(' ');
             if (!targetLanguage || textToTranslate.length === 0) {
               throw new Error('Usage: /translate <language> <text>');
@@ -302,6 +302,7 @@ export function AssistantChat() {
             response = await translateText({ targetLanguage, text: textToTranslate.join(' ') });
             response.content = response.translatedText;
             break;
+          }
           case 'transcribe':
              if (!dataUri) throw new Error('Please attach an audio file or record audio to transcribe.');
              response = await transcribeAudio({ audioDataUri: dataUri });
@@ -474,3 +475,5 @@ function SearchResultTable({ result }: { result: SearchCaseLawOutput }) {
     </div>
   );
 }
+
+    
