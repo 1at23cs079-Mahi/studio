@@ -68,12 +68,9 @@ const MemoizedMessage = memo(function Message({ message }: { message: Message })
       return <SearchResultTable result={message.searchResult} />;
     }
     
-    const sections = message.content.split(/(\n- |\n\d+\. )/).filter(p => p.trim() !== '');
-    
-    let isList = false;
     const contentBlocks: React.ReactNode[] = [];
     let currentList: { type: 'ul' | 'ol'; items: string[] } | null = null;
-    
+
     const flushList = () => {
       if (currentList) {
         const ListComponent = currentList.type;
@@ -88,28 +85,28 @@ const MemoizedMessage = memo(function Message({ message }: { message: Message })
       }
     };
 
-    message.content.split('\n').forEach((line) => {
-        const olMatch = line.match(/^\d+\.\s(.*)/);
-        const ulMatch = line.match(/^- (.*)/);
+    message.content.split('\n').forEach((line, index) => {
+      const olMatch = line.match(/^\d+\.\s(.*)/);
+      const ulMatch = line.match(/^- (.*)/);
 
-        if (olMatch) {
-            if (currentList?.type !== 'ol') {
-                flushList();
-                currentList = { type: 'ol', items: [] };
-            }
-            currentList.items.push(olMatch[1]);
-        } else if (ulMatch) {
-            if (currentList?.type !== 'ul') {
-                flushList();
-                currentList = { type: 'ul', items: [] };
-            }
-            currentList.items.push(ulMatch[1]);
-        } else {
-            flushList();
-            if (line.trim() !== '') {
-                contentBlocks.push(<p key={`p-${contentBlocks.length}`}>{line}</p>);
-            }
+      if (olMatch) {
+        if (currentList?.type !== 'ol') {
+          flushList();
+          currentList = { type: 'ol', items: [] };
         }
+        currentList.items.push(olMatch[1]);
+      } else if (ulMatch) {
+        if (currentList?.type !== 'ul') {
+          flushList();
+          currentList = { type: 'ul', items: [] };
+        }
+        currentList.items.push(ulMatch[1]);
+      } else {
+        flushList();
+        if (line.trim() !== '') {
+          contentBlocks.push(<p key={`p-${contentBlocks.length}`}>{line}</p>);
+        }
+      }
     });
 
     flushList(); // Add any remaining list
@@ -176,10 +173,11 @@ export function AssistantChat() {
     const command = searchParams.get('command');
     if (command && !['analyze', 'summarize', 'translate'].includes(command)) {
       setInput(`/${command} `);
-    } else {
-      const search = new URLSearchParams(searchParams);
-      search.delete('command');
-      window.history.replaceState({}, '', `?${search.toString()}`);
+    } else if (!command) {
+        // Clear command if it's one of the excluded ones or not present
+        const search = new URLSearchParams(searchParams);
+        search.delete('command');
+        window.history.replaceState({}, '', `?${search.toString()}`);
     }
   }, []);
 
@@ -499,5 +497,3 @@ function SearchResultTable({ result }: { result: SearchCaseLawOutput }) {
     </div>
   );
 }
-
-    
