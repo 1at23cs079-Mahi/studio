@@ -44,6 +44,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Scale } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
 
 type Message = {
   role: 'user' | 'model';
@@ -379,8 +381,9 @@ export function AssistantChat() {
   }
 
   return (
-    <>
-      <main className="flex-1 overflow-y-auto p-4 md:p-6">
+    <div className="flex flex-col h-full">
+      <ScrollArea className="flex-1">
+        <div className="p-4 md:p-6">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
             <Logo iconClassName="size-16 text-primary" textClassName="text-5xl" />
@@ -403,7 +406,8 @@ export function AssistantChat() {
             )}
           </div>
         )}
-      </main>
+        </div>
+      </ScrollArea>
 
       <div className="border-t bg-background px-4 py-3">
         <form onSubmit={handleFormSubmit} className="relative">
@@ -451,7 +455,7 @@ export function AssistantChat() {
             </div>
           )}
       </div>
-    </>
+    </div>
   );
 }
 

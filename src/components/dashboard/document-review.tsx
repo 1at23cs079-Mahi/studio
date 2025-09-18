@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { reviewDocument } from '@/ai/flows/review-document';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type AnalysisResult = {
   content: string;
@@ -121,10 +122,10 @@ export function DocumentReview() {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+    <div className="flex flex-col h-full p-4 md:p-6 gap-6">
       <div className="flex flex-col gap-4">
         <Card
-          className={`flex-1 flex flex-col items-center justify-center p-6 border-2 border-dashed transition-colors duration-300 ${
+          className={`flex-1 flex flex-col items-center justify-center p-6 border-2 border-dashed transition-colors duration-300 min-h-[200px] ${
             isDragging ? 'border-primary bg-primary/10' : 'border-border'
           }`}
           onDragEnter={handleDragEnter}
@@ -134,15 +135,12 @@ export function DocumentReview() {
         >
           {!file ? (
             <>
-              <UploadCloud className="w-16 h-16 text-muted-foreground" />
+              <UploadCloud className="w-12 h-12 text-muted-foreground" />
               <h3 className="mt-4 text-lg font-semibold">
                 Upload your document
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Drag and drop your file here, or click to browse.
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Supports PDF, DOCX, TXT, and image files.
+                Drag and drop or click to browse.
               </p>
               <Button
                 asChild
@@ -163,7 +161,7 @@ export function DocumentReview() {
             </>
           ) : (
             <div className="flex flex-col items-center text-center">
-              <FileCheck2 className="w-16 h-16 text-green-500" />
+              <FileCheck2 className="w-12 h-12 text-green-500" />
               <p className="mt-4 font-semibold">{file.name}</p>
               <p className="text-sm text-muted-foreground">
                 ({(file.size / 1024 / 1024).toFixed(2)} MB)
@@ -182,7 +180,7 @@ export function DocumentReview() {
         </Card>
         <div className="flex flex-col gap-2">
             <Textarea 
-                placeholder="Tell me what to do with the document. For example: 'Summarize this document' or 'Extract the buyer, seller, and property address'."
+                placeholder="Tell me what to do with the document. E.g., 'Summarize this document' or 'Extract the buyer, seller, and property address'."
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 disabled={isLoading}
@@ -201,38 +199,40 @@ export function DocumentReview() {
           </Button>
         </div>
       </div>
-      <div className="flex flex-col">
-        <Card className="flex-1 flex flex-col">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div className='space-y-1'>
-                <CardTitle>Analysis Result</CardTitle>
-                <CardDescription>
-                { !analysisResult && !isLoading ? 'Your document analysis will appear here.' : ''}
-                </CardDescription>
+      <Card className="flex-1 flex flex-col">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className='space-y-1'>
+              <CardTitle>Analysis Result</CardTitle>
+              <CardDescription>
+              { !analysisResult && !isLoading ? 'Your document analysis will appear here.' : ''}
+              </CardDescription>
+          </div>
+          {analysisResult && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCopy}
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="flex-1 flex flex-col">
+          <ScrollArea className='flex-1'>
+            <div className='pr-4'>
+                {isLoading ? (
+                <div className="flex flex-1 items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+                ) : analysisResult ? (
+                <div className="prose prose-sm max-w-none text-sm text-foreground dark:prose-invert flex-1">
+                    <p>{analysisResult.content}</p>
+                </div>
+                ) : <div className='flex-1'/>}
             </div>
-            {analysisResult && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleCopy}
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent className="flex-1 flex flex-col">
-            {isLoading ? (
-              <div className="flex flex-1 items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : analysisResult ? (
-              <div className="prose prose-sm max-w-none text-sm text-foreground dark:prose-invert flex-1 overflow-y-auto">
-                <p>{analysisResult.content}</p>
-              </div>
-            ) : <div className='flex-1'/>}
-          </CardContent>
-        </Card>
-      </div>
-    </main>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
