@@ -20,7 +20,10 @@ export async function searchCaseLawDatabase(
   const results = db.cases.filter(c => 
     c.title.toLowerCase().includes(queryLower) ||
     c.summary.toLowerCase().includes(queryLower) ||
-    c.subject.toLowerCase().includes(queryLower)
+    c.subject.toLowerCase().includes(queryLower) ||
+    c.citation.toLowerCase().includes(queryLower) ||
+    c.court.toLowerCase().includes(queryLower) ||
+    c.status.toLowerCase().includes(queryLower)
   ).slice(0, limit);
 
   // In a real scenario, you'd apply filters here.
