@@ -11,6 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { searchCaseLawDatabase } from '@/services/legal-search';
+import { ModelReference } from 'genkit/model';
 
 export type ChatInput = z.infer<typeof ChatInputSchema>;
 const ChatInputSchema = z.object({
@@ -24,6 +25,7 @@ const ChatInputSchema = z.object({
   userRole: z
     .enum(['Advocate', 'Student', 'Public'])
     .describe('The role of the user.'),
+  model: z.custom<ModelReference>().optional(),
 });
 
 export type ChatOutput = z.infer<typeof ChatOutputSchema>;
@@ -65,7 +67,7 @@ export const chat = ai.defineFlow(
   },
   async (input) => {
     const { text } = await ai.generate({
-        model: 'googleai/gemini-2.5-flash',
+        model: input.model || 'googleai/gemini-2.5-flash',
         system: `You are LegalAi, a RAG-based AI assistant for the Indian legal system. Your responses must be grounded in the information provided by the 'legalSearch' tool.
 Never invent information. If the tool does not provide an answer, state that you don't have enough information.
 Always cite the sources of your information from the tool's output.

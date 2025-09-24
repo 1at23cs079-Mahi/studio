@@ -21,19 +21,20 @@ import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '../icons/logo';
 import { Sun, Moon, User, LogOut, LifeBuoy, Bot, Maximize, Minimize2 } from 'lucide-react';
-import { useState } from 'react';
+import type { ModelReference } from 'genkit/model';
 
-const llms = [
-    { id: 'gpt-4', name: 'GPT-4' },
-    { id: 'custom-llm', name: 'Custom LLM' },
+export type ModelId = ModelReference;
+
+const llms: { id: ModelId; name: string }[] = [
+    { id: 'googleai/gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
+    { id: 'googleai/gemini-pro', name: 'Gemini Pro' },
 ];
 
-export function DashboardHeader() {
+export function DashboardHeader({ selectedLlm, setSelectedLlm }: { selectedLlm: ModelId, setSelectedLlm: (id: ModelId) => void }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
-  const [selectedLlm, setSelectedLlm] = useState(llms[0].id);
 
   const role = searchParams.get('role') || 'public';
   const name = searchParams.get('name') || 'User';
@@ -62,24 +63,23 @@ export function DashboardHeader() {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
       <SidebarTrigger className="md:hidden" />
-      <div className="flex items-center gap-2">
-        <Bot className="h-6 w-6 text-primary" />
-        <h1 className="text-lg font-semibold font-headline">LegalAI Chat</h1>
+      <div className="flex items-center gap-2 md:hidden">
+        <Logo iconClassName="text-primary" />
       </div>
 
       <div className="flex flex-1 items-center justify-end gap-2">
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-[150px] justify-between">
+                <Button variant="outline" className="w-[180px] justify-between">
                     {llms.find(llm => llm.id === selectedLlm)?.name}
                     <Bot className="h-4 w-4" />
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-[150px]">
+            <DropdownMenuContent className="w-[180px]">
                 <DropdownMenuLabel>Select LLM</DropdownMenuLabel>
-                <DropdownMenuRadioGroup value={selectedLlm} onValueChange={setSelectedLlm}>
+                <DropdownMenuRadioGroup value={selectedLlm as string} onValueChange={(v) => setSelectedLlm(v as ModelId)}>
                     {llms.map(llm => (
-                        <DropdownMenuRadioItem key={llm.id} value={llm.id}>{llm.name}</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem key={llm.id as string} value={llm.id as string}>{llm.name}</DropdownMenuRadioItem>
                     ))}
                 </DropdownMenuRadioGroup>
             </DropdownMenuContent>

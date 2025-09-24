@@ -23,6 +23,7 @@ import { useSearchParams } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import type { ModelId } from './header';
 
 
 type Message = {
@@ -106,7 +107,7 @@ const MemoizedMessage = memo(function Message({ message, onRetry }: { message: M
 });
 
 
-export function AssistantChat() {
+export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -158,6 +159,7 @@ export function AssistantChat() {
         message: messageContent,
         history: historyForApi,
         userRole: getRole(),
+        model: selectedLlm,
       };
 
       const response = await chat(inputPayload);
