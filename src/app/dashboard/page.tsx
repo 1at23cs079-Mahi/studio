@@ -42,7 +42,7 @@ function QuickAccessTile({
           <div className="bg-primary/10 p-3 rounded-full transition-all duration-300 group-hover:scale-110">
             <Icon className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-lg font-headline">{title}</CardTitle>
+          <CardTitle className="text-base md:text-lg font-headline">{title}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">{description}</p>
@@ -183,19 +183,19 @@ export default function DashboardPage() {
   return (
     <div className="flex-1 space-y-8 p-4 md:p-8 animate-fade-in">
       <div className="space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight font-headline">
+        <h2 className="text-2xl md:text-3xl font-bold tracking-tight font-headline">
           {welcome}
         </h2>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground text-sm md:text-base">
           {description}
         </p>
       </div>
 
       <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-        <h3 className="text-xl font-semibold font-headline mb-4">
+        <h3 className="text-lg md:text-xl font-semibold font-headline mb-4">
           Quick Access
         </h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {quickAccess.map(item => {
             const search = new URLSearchParams(searchParams.toString());
             let href = '';
@@ -230,7 +230,7 @@ export default function DashboardPage() {
 
       { (role === 'advocate' || role === 'student') && (
         <div className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-            <h3 className="text-xl font-semibold font-headline mb-4">
+            <h3 className="text-lg md:text-xl font-semibold font-headline mb-4">
             Recent Activity
             </h3>
             <Card>
@@ -242,7 +242,7 @@ export default function DashboardPage() {
                         <Clock className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <div className="flex-1">
-                        <p className="font-medium">{activity.action}</p>
+                        <p className="font-medium text-sm">{activity.action}</p>
                         <p className="text-sm text-muted-foreground">
                         {activity.details}
                         </p>
