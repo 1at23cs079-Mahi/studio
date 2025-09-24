@@ -15,7 +15,8 @@ import {
   Clock,
   BookOpen,
   Gavel,
-  Languages
+  Languages,
+  AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -176,6 +177,19 @@ export default function DashboardPage() {
         <p className="text-muted-foreground">
           {description}
         </p>
+      </div>
+
+      <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 rounded-md">
+        <div className="flex">
+            <div className="flex-shrink-0">
+                <AlertTriangle className="h-5 w-5 text-yellow-400" aria-hidden="true" />
+            </div>
+            <div className="ml-3">
+                <p className="text-sm text-yellow-700 dark:text-yellow-200">
+                LegalAI is a standalone application and not an add-on for ChatGPT. The information provided by LegalAI is for informational purposes only and does not constitute legal advice.
+                </p>
+            </div>
+        </div>
       </div>
 
       <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
