@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 require('dotenv').config({ path: './.env' });
 
@@ -5,9 +6,9 @@ require('dotenv').config({ path: './.env' });
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
-    // This is required to allow the Next.js dev server to be accessed from the Firebase Studio preview.
-    allowedDevOrigins: ["*.cluster-htdgsbmflbdmov5xrjithceibm.cloudworkstations.dev", "*.cloudworkstations.dev"],
   },
+  // This is required to allow the Next.js dev server to be accessed from the Firebase Studio preview.
+  allowedDevOrigins: ["*.cluster-htdgsbmflbdmov5xrjithceibm.cloudworkstations.dev", "*.cloudworkstations.dev"],
   typescript: {
     ignoreBuildErrors: true,
   },
