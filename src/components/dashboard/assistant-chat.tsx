@@ -66,8 +66,8 @@ const MemoizedMessage = memo(function Message({ message, onRetry }: { message: M
       <div className={cn(
         'group relative max-w-lg rounded-xl px-4 py-2.5 shadow-sm',
         isUser
-          ? 'bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] text-white'
-          : 'bg-card text-card-foreground',
+          ? 'bg-[--user-bubble-bg] text-[hsl(var(--user-bubble-foreground))]'
+          : 'bg-[hsl(var(--bot-bubble-bg))] text-[hsl(var(--bot-bubble-foreground))]',
         { 'bg-destructive/20 border border-destructive/50': message.error }
       )}>
         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -244,7 +244,7 @@ export function AssistantChat() {
         <form onSubmit={handleFormSubmit} className="relative">
           <Textarea
             placeholder="Ask anything..."
-            className="pr-24 pl-10 py-3 min-h-[52px] resize-none"
+            className="pr-24 pl-10 py-3 min-h-[52px] resize-none focus-visible:shadow-lg"
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -260,7 +260,7 @@ export function AssistantChat() {
              </Button>
           </div>
           <div className="absolute top-1/2 -translate-y-1/2 right-3 flex items-center">
-            <Button type="submit" size="sm" disabled={isLoading || !input.trim()}>
+            <Button type="submit" size="sm" variant="secondary" disabled={isLoading || !input.trim()}>
               <Send className="h-4 w-4 mr-2" />
               Send
             </Button>

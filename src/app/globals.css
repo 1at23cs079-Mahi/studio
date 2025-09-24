@@ -10,28 +10,28 @@
     --card-foreground: 222 22% 9%;
     --popover: 240 6% 98%;
     --popover-foreground: 222 22% 9%;
-    --primary: 243 51% 61%; /* #6366f1 */
+    --primary: 262 82% 56%; /* #4B0082 - Deep Indigo */
     --primary-foreground: 0 0% 98%;
     --secondary: 240 5% 95%; /* #f3f4f6 */
     --secondary-foreground: 222 22% 9%;
     --muted: 240 5% 95%;
     --muted-foreground: 240 4% 46%; /* #6b7280 */
-    --accent: 243 51% 61%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 45 100% 50%; /* #FFD700 - Gold */
+    --accent-foreground: 222 22% 9%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 6% 90%;
     --input: 240 6% 93%;
-    --ring: 243 51% 61%;
+    --ring: 262 82% 56%;
     --radius: 0.75rem; /* 12px */
 
     /* Custom styles from PRD */
     --sidebar-background: 240 5% 95%; /* #f3f4f6 */
     --sidebar-foreground: 222 22% 9%;
     --sidebar-border: 240 6% 85%;
-    --sidebar-accent: 243 51% 61%;
+    --sidebar-accent: 262 82% 56%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-primary: 243 51% 61%;
+    --sidebar-primary: 262 82% 56%;
     --sidebar-primary-foreground: 0 0% 98%;
 
     --user-bubble-bg: linear-gradient(to right, hsl(217, 91%, 60%), hsl(221, 83%, 73%)); /* #3b82f6 -> #60a5fa */
@@ -47,27 +47,27 @@
     --card-foreground: 0 0% 98%;
     --popover: 222 47% 11%;
     --popover-foreground: 0 0% 98%;
-    --primary: 243 51% 61%; /* #6366f1 */
+    --primary: 262 82% 56%; /* #4B0082 */
     --primary-foreground: 0 0% 98%;
     --secondary: 222 22% 9%; /* #111827 */
     --secondary-foreground: 0 0% 98%;
     --muted: 222 22% 9%;
     --muted-foreground: 220 9% 63%; /* #9ca3af */
-    --accent: 243 51% 61%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 45 100% 50%; /* #FFD700 */
+    --accent-foreground: 222 22% 9%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 222 22% 15%;
     --input: 222 22% 13%;
-    --ring: 243 51% 61%;
+    --ring: 262 82% 56%;
 
     /* Custom styles from PRD */
     --sidebar-background: 222 22% 9%; /* #111827 */
     --sidebar-foreground: 0 0% 98%;
     --sidebar-border: 222 22% 15%;
-    --sidebar-accent: 243 51% 61%;
+    --sidebar-accent: 262 82% 56%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-primary: 243 51% 61%;
+    --sidebar-primary: 262 82% 56%;
     --sidebar-primary-foreground: 0 0% 98%;
 
     --user-bubble-bg: linear-gradient(to right, hsl(217, 91%, 60%), hsl(221, 83%, 73%)); /* #3b82f6 -> #60a5fa */
@@ -95,11 +95,11 @@
   .animate-bounce-dot-2 { animation: bounce 1s infinite 0.2s; }
   .animate-bounce-dot-3 { animation: bounce 1s infinite 0.4s; }
 
-  .animate-fade-in {
-    animation: fade-in 0.3s ease-in-out;
-  }
   @keyframes fade-in {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-in-out;
   }
 }
