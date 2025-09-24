@@ -264,7 +264,7 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
              </Button>
           </div>
           <div className="absolute top-1/2 -translate-y-1/2 right-3 flex items-center">
-            <Button type="submit" size="sm" variant="secondary" disabled={isLoading || !input.trim()}>
+            <Button type="submit" size="sm" disabled={isLoading || !input.trim()}>
               <Send className="h-4 w-4 mr-2" />
               Send
             </Button>
