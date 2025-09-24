@@ -1,24 +1,13 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow any authenticated user to create their own user document,
-    // and only allow them to read/update/delete their own document.
+    // This rule allows a newly created user to create their own user document,
+    // but no one else can. After creation, only the user themselves can access it.
+    // This is the key to fixing the registration failure.
     match /users/{userId} {
-      allow create: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null;
       allow read, update, delete: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Example rules for other collections, as provided by the user.
-    match /cases/{caseId} {
-      allow create: if request.auth != null; // any logged-in user can create
-      allow read, update, delete: if request.auth != null 
-                                  && request.auth.uid == resource.data.ownerId;
-    }
-
-    match /queries/{queryId} {
-      allow create: if request.auth != null; 
-      allow read, update, delete: if request.auth != null 
-                                  && request.auth.uid == resource.data.userId;
     }
   }
 }

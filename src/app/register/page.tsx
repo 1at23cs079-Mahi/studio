@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -63,13 +64,12 @@ export default function RegisterPage() {
       );
       const user = userCredential.user;
 
-      // 2. Update Firebase Auth profile (optional but good practice)
+      // 2. Update Firebase Auth profile
       await updateProfile(user, {
         displayName: name,
       });
 
-      // 3. Save user profile to Firestore
-      // The security rules will allow this because request.auth.uid will match the document ID.
+      // 3. Save user profile to Firestore, this will be allowed by the security rules
       await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
         name: name,
@@ -87,10 +87,15 @@ export default function RegisterPage() {
 
     } catch (error: any) {
       console.error("Registration Error:", error);
-      let errorMessage = error.message;
-      if (error.code === 'permission-denied') {
-        errorMessage = 'Failed to save user profile. Please ensure Firestore security rules are deployed correctly.'
+      let errorMessage = "An unknown error occurred during registration.";
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'This email address is already in use.';
+      } else if (error.code === 'permission-denied') {
+        errorMessage = 'Failed to save user profile. Please ensure Firestore database is created and security rules are deployed correctly.'
+      } else {
+        errorMessage = error.message;
       }
+      
       toast({
         variant: 'destructive',
         title: 'Registration Failed',
