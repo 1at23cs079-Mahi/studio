@@ -55,6 +55,7 @@ export default function RegisterPage() {
     }
 
     try {
+      // 1. Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -62,13 +63,14 @@ export default function RegisterPage() {
       );
       const user = userCredential.user;
 
-      // Update Firebase Auth profile
+      // 2. Update Firebase Auth profile (optional but good practice)
       await updateProfile(user, {
         displayName: name,
       });
 
-      // Save user info to Firestore
-      // This is the step that requires correct security rules
+      // 3. Save user profile to Firestore
+      // This is the step that requires the correct security rules.
+      // The rules must allow a 'create' operation on the users collection.
       await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
         name: name,
@@ -78,16 +80,12 @@ export default function RegisterPage() {
 
       toast({
         title: 'Registration Successful',
-        description: "You're now part of the community!",
+        description: "Welcome! You can now log in.",
       });
 
-      const queryParams = new URLSearchParams({
-        name: name,
-        role: role,
-        email: user.email!,
-      });
+      // Redirect to login page after successful registration
+      router.push('/login');
 
-      router.push(`/dashboard?${queryParams.toString()}`);
     } catch (error: any) {
       console.error("Registration Error:", error);
       toast({

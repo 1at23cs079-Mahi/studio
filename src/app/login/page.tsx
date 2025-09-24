@@ -44,10 +44,11 @@ export default function LoginPage() {
         }
     } catch (e) {
         console.error("Error fetching user data from Firestore:", e);
+        // Do not block login if firestore fails, but notify user
         toast({
             variant: 'destructive',
-            title: 'Firestore Error',
-            description: 'Could not fetch user profile. Please try again.',
+            title: 'Profile Error',
+            description: 'Could not fetch user profile. Using default values.',
         });
     }
     
@@ -59,7 +60,7 @@ export default function LoginPage() {
     const queryParams = new URLSearchParams({
         name,
         role,
-        email: user.email,
+        email: user.email!,
     });
 
     router.push(`/dashboard?${queryParams.toString()}`);
@@ -89,7 +90,20 @@ export default function LoginPage() {
     setIsLoading(true);
     const authProvider = provider === 'google' ? new GoogleAuthProvider() : new GithubAuthProvider();
     try {
+      const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+      await setPersistence(auth, persistence);
       const result = await signInWithPopup(auth, authProvider);
+      // For social logins, we might need to create the Firestore doc if it's the first time
+      const userDocRef = doc(db, 'users', result.user.uid);
+      const userDoc = await getDoc(userDocRef);
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, {
+            uid: result.user.uid,
+            name: result.user.displayName,
+            email: result.user.email,
+            role: 'public', // Default role for social sign-ups
+        });
+      }
       await handleSuccessfulLogin(result.user);
     } catch (error: any) {
       toast({
@@ -112,6 +126,7 @@ export default function LoginPage() {
       });
       return;
     }
+    setIsLoading(true);
     try {
       await sendPasswordResetEmail(auth, email);
       toast({
@@ -124,6 +139,8 @@ export default function LoginPage() {
         title: 'Error',
         description: error.message,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -157,6 +174,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={handleForgotPassword}
                     className="ml-auto inline-block text-sm underline"
+                    disabled={isLoading}
                   >
                     Forgot your password?
                   </button>

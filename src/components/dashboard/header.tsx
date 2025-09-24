@@ -22,19 +22,42 @@ import {
 } from '@/components/ui/tooltip';
 import { Search, Sparkles, User, LogOut, LifeBuoy, Sun, Moon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTheme } from '@/app/layout';
+import { auth } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+
 
 export function DashboardHeader() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const { toast } = useToast();
   const { setTheme } = useTheme();
+
   const role = searchParams.get('role') || 'public';
   const name = searchParams.get('name') || 'User';
   const email = searchParams.get('email') || 'user@example.com';
   const initial = name ? name[0].toUpperCase() : 'U';
 
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      toast({
+        title: 'Logged Out',
+        description: 'You have been successfully logged out.',
+      });
+      router.push('/login');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Logout Failed',
+        description: error.message,
+      });
+    }
+  };
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-8">
@@ -124,11 +147,9 @@ export function DashboardHeader() {
               <span>Support</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/">
+            <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
-              </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

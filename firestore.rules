@@ -1,25 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // This rule allows a new user to be created, but only if they are
-    // authenticated. After that, only the user themselves can read or
-    // write their own data. This is the key to fixing registration.
     match /users/{userId} {
+      // Allow user creation during registration
       allow create: if request.auth != null;
+      
+      // Allow authenticated users to read, update, or delete their own document
       allow read, update, delete: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Keep the other rules provided previously as they are good for future features
-    match /cases/{caseId} {
-      allow create: if request.auth != null;
-      allow read, update, delete: if request.auth != null 
-                                  && request.auth.uid == resource.data.ownerId;
-    }
-    
-    match /queries/{queryId} {
-      allow create: if request.auth != null; 
-      allow read, update, delete: if request.auth != null 
-                                  && request.auth.uid == resource.data.userId;
     }
   }
 }

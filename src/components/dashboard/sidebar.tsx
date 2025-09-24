@@ -24,11 +24,15 @@ import {
 } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
+import { auth } from '@/lib/firebase';
 
 export function DashboardSidebar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { toast } = useToast();
 
   const role = searchParams.get('role');
   const name = searchParams.get('name');
@@ -60,6 +64,23 @@ export function DashboardSidebar() {
 
   const menuItems = allMenuItems[role as keyof typeof allMenuItems] || allMenuItems.public;
 
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      toast({
+        title: 'Logged Out',
+        description: 'You have been successfully logged out.',
+      });
+      router.push('/login');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Logout Failed',
+        description: error.message,
+      });
+    }
+  };
+
 
   return (
     <Sidebar collapsible="icon" className="group-data-[variant=inset]:bg-transparent">
@@ -90,11 +111,9 @@ export function DashboardSidebar() {
                 <span>Settings</span>
               </Link>
          </SidebarMenuButton>
-         <SidebarMenuButton asChild tooltip={{ children: 'Log out', side: 'right' }}>
-              <Link href="/">
-                <LogOut />
-                <span>Log Out</span>
-              </Link>
+         <SidebarMenuButton onClick={handleLogout} tooltip={{ children: 'Log out', side: 'right' }}>
+              <LogOut />
+              <span>Log Out</span>
          </SidebarMenuButton>
       </SidebarFooter>
     </Sidebar>
