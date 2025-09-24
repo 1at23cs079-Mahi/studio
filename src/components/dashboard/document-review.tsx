@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -18,27 +17,32 @@ import {
   FileCheck2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { analyzeDocumentAndSuggestEdits } from '@/ai/flows/analyze-document-and-suggest-edits';
+import { reviewDocument } from '@/ai/flows/review-document';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
-type AnalysisResult = {
-  annotatedClauses: string;
-  suggestedEdits: string;
-  matchingPrecedent: string;
-};
+const analysisModes = [
+  { value: 'summary', label: 'Summary', prompt: 'Summarize the following document into concise, easy-to-read points. Focus only on the content in the document.' },
+  { value: 'key-clauses', label: 'Key Clauses', prompt: 'Extract all important legal clauses from the document. Include clause names, descriptions, and relevant sections if possible.' },
+  { value: 'party-details', label: 'Party Details', prompt: 'List all parties mentioned in the document along with their roles and responsibilities.' },
+  { value: 'dates-deadlines', label: 'Dates & Deadlines', prompt: 'Extract all dates, deadlines, and timelines mentioned in the document. Include the context for each date (e.g., payment due date, contract expiration).' },
+  { value: 'amounts-payments', label: 'Amounts / Payments', prompt: 'Extract all monetary values, financial obligations, or penalties mentioned in the document. Provide the context for each amount.' },
+  { value: 'legal-risks', label: 'Legal Risks', prompt: 'Analyze the document and identify any potential legal risks, liabilities, or exposures. Provide clear explanations for each risk.' },
+  { value: 'custom-query', label: 'Custom Query', prompt: 'Answer the user’s specific question based on the document content. If the answer is not in the document, say: "This information is not present in the document". User Question: ' },
+];
 
 export function DocumentReview() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(
-    null
-  );
+  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [selectedMode, setSelectedMode] = useState(analysisModes[0].value);
+  const [customQuery, setCustomQuery] = useState('');
 
   const handleFileChange = (files: FileList | null) => {
     if (files && files[0]) {
-      // Limit file size to 10MB
       if (files[0].size > 10 * 1024 * 1024) {
         toast({
           variant: 'destructive',
@@ -48,6 +52,7 @@ export function DocumentReview() {
         return;
       }
       setFile(files[0]);
+      setAnalysisResult(null); // Reset result when new file is uploaded
     }
   };
 
@@ -84,6 +89,24 @@ export function DocumentReview() {
       });
       return;
     }
+
+    const mode = analysisModes.find(m => m.value === selectedMode);
+    if (!mode) return;
+
+    let finalPrompt = mode.prompt;
+    if (selectedMode === 'custom-query') {
+      if (!customQuery.trim()) {
+        toast({
+          variant: 'destructive',
+          title: 'Custom Query is empty',
+          description: 'Please enter your question about the document.',
+        });
+        return;
+      }
+      finalPrompt += customQuery;
+    }
+
+
     setIsLoading(true);
     setAnalysisResult(null);
 
@@ -95,14 +118,8 @@ export function DocumentReview() {
         reader.readAsDataURL(file);
       });
 
-      const response = await analyzeDocumentAndSuggestEdits({ documentDataUri: dataUri });
-      const parsedResults = JSON.parse(response.analysisResults);
-
-      setAnalysisResult({
-        annotatedClauses: parsedResults.annotatedClauses || "No clauses annotated.",
-        suggestedEdits: parsedResults.suggestedEdits || "No edits suggested.",
-        matchingPrecedent: parsedResults.matchingPrecedent || "No matching precedent found.",
-      });
+      const response = await reviewDocument({ documentDataUri: dataUri, prompt: finalPrompt });
+      setAnalysisResult(response.result);
 
     } catch (error: any) {
       console.error('Document analysis failed:', error);
@@ -111,13 +128,13 @@ export function DocumentReview() {
         title: 'An error occurred',
         description:
           error.message ||
-          'Failed to complete the analysis. The model may have returned an unexpected format. Please try again.',
+          'Failed to complete the analysis. Please try again.',
       });
     } finally {
       setIsLoading(false);
     }
   };
-
+  
   const handleCopy = (content: string) => {
     navigator.clipboard.writeText(content);
     toast({
@@ -127,7 +144,7 @@ export function DocumentReview() {
 
   return (
     <div className="grid md:grid-cols-2 gap-6 h-full">
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         <Card
           className={`flex-1 flex flex-col items-center justify-center p-6 border-2 border-dashed transition-colors duration-300 ${
             isDragging ? 'border-primary bg-primary/10' : 'border-border'
@@ -174,7 +191,10 @@ export function DocumentReview() {
                 variant="destructive"
                 size="sm"
                 className="mt-4"
-                onClick={() => setFile(null)}
+                onClick={() => {
+                  setFile(null);
+                  setAnalysisResult(null);
+                }}
               >
                 <X className="w-4 h-4 mr-2" />
                 Remove File
@@ -182,6 +202,35 @@ export function DocumentReview() {
             </div>
           )}
         </Card>
+
+        <Card>
+            <CardContent className="p-4 space-y-4">
+                <div className="grid gap-2">
+                    <label className="text-sm font-medium">Analysis Mode</label>
+                    <Select value={selectedMode} onValueChange={setSelectedMode}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select an analysis mode" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {analysisModes.map(mode => (
+                                <SelectItem key={mode.value} value={mode.value}>{mode.label}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                {selectedMode === 'custom-query' && (
+                    <div className="grid gap-2">
+                         <label className="text-sm font-medium">Your Question</label>
+                         <Textarea 
+                            placeholder="e.g., 'What is the governing law for this agreement?'"
+                            value={customQuery}
+                            onChange={(e) => setCustomQuery(e.target.value)}
+                         />
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+
         <Button
           onClick={executeAnalysis}
           disabled={!file || isLoading}
@@ -197,70 +246,40 @@ export function DocumentReview() {
           )}
         </Button>
       </div>
-
-      <div className="flex flex-col gap-6">
-        {isLoading ? (
-          <Card className="flex-1 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-4">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-muted-foreground">Analyzing document...</p>
-            </div>
+      
+      <div className="flex flex-col">
+          <Card className="flex-1 flex flex-col">
+            <CardHeader className="flex-row items-center justify-between">
+              <CardTitle>Analysis Result</CardTitle>
+              {analysisResult && (
+                <Button variant="ghost" size="icon" onClick={() => handleCopy(analysisResult)}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="flex-1">
+                <ScrollArea className="h-full w-full">
+                    {isLoading ? (
+                         <div className="flex h-full items-center justify-center">
+                            <div className="flex flex-col items-center gap-4">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            <p className="text-muted-foreground">Analyzing document...</p>
+                            </div>
+                        </div>
+                    ) : analysisResult ? (
+                        <div className="prose prose-sm max-w-none text-sm text-foreground dark:prose-invert whitespace-pre-wrap">
+                           {analysisResult}
+                        </div>
+                    ) : (
+                        <div className="flex h-full items-center justify-center">
+                            <div className="text-center text-muted-foreground">
+                            <p>Your analysis results will appear here.</p>
+                            </div>
+                        </div>
+                    )}
+                </ScrollArea>
+            </CardContent>
           </Card>
-        ) : analysisResult ? (
-          <>
-            <Card className="flex-1 flex flex-col">
-              <CardHeader className="flex-row items-center justify-between">
-                <CardTitle>Annotated Clauses</CardTitle>
-                <Button variant="ghost" size="icon" onClick={() => handleCopy(analysisResult.annotatedClauses)}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent className="flex-1">
-                <ScrollArea className="h-full">
-                  <div className="prose prose-sm max-w-none text-sm text-foreground dark:prose-invert">
-                    <p>{analysisResult.annotatedClauses}</p>
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-            <Card className="flex-1 flex flex-col">
-              <CardHeader className="flex-row items-center justify-between">
-                <CardTitle>Suggested Redline Edits</CardTitle>
-                 <Button variant="ghost" size="icon" onClick={() => handleCopy(analysisResult.suggestedEdits)}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent className="flex-1">
-                 <ScrollArea className="h-full">
-                   <div className="prose prose-sm max-w-none text-sm text-foreground dark:prose-invert">
-                    <p>{analysisResult.suggestedEdits}</p>
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-             <Card className="flex-1 flex flex-col">
-              <CardHeader className="flex-row items-center justify-between">
-                <CardTitle>Matching Precedent</CardTitle>
-                 <Button variant="ghost" size="icon" onClick={() => handleCopy(analysisResult.matchingPrecedent)}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent className="flex-1">
-                 <ScrollArea className="h-full">
-                   <div className="prose prose-sm max-w-none text-sm text-foreground dark:prose-invert">
-                    <p>{analysisResult.matchingPrecedent}</p>
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </>
-        ) : (
-          <Card className="flex-1 flex items-center justify-center">
-            <div className="text-center text-muted-foreground">
-              <p>Your analysis results will appear here.</p>
-            </div>
-          </Card>
-        )}
       </div>
     </div>
   );
