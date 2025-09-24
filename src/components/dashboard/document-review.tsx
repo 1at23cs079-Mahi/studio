@@ -23,13 +23,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 
 const analysisModes = [
-  { value: 'summary', label: 'Summary', prompt: 'Summarize the following document into concise, easy-to-read points. Focus only on the content in the document.' },
-  { value: 'key-clauses', label: 'Key Clauses', prompt: 'Extract all important legal clauses from the document. Include clause names, descriptions, and relevant sections if possible.' },
-  { value: 'party-details', label: 'Party Details', prompt: 'List all parties mentioned in the document along with their roles and responsibilities.' },
-  { value: 'dates-deadlines', label: 'Dates & Deadlines', prompt: 'Extract all dates, deadlines, and timelines mentioned in the document. Include the context for each date (e.g., payment due date, contract expiration).' },
-  { value: 'amounts-payments', label: 'Amounts / Payments', prompt: 'Extract all monetary values, financial obligations, or penalties mentioned in the document. Provide the context for each amount.' },
-  { value: 'legal-risks', label: 'Legal Risks', prompt: 'Analyze the document and identify any potential legal risks, liabilities, or exposures. Provide clear explanations for each risk.' },
-  { value: 'custom-query', label: 'Custom Query', prompt: 'Answer the user’s specific question based on the document content. If the answer is not in the document, say: "This information is not present in the document". User Question: ' },
+  { value: 'summary', label: 'Summary', prompt: 'You are a Legal Document Analysis assistant. \nSummarize the following document into concise, easy-to-read points. \nFocus only on the content in the document.\n\nDocument Content:\n{{documentDataUri}}\n\nOutput:\n- Provide a clear, structured summary.\n- Keep it brief but cover all major points.' },
+  { value: 'key-clauses', label: 'Key Clauses', prompt: 'You are a Legal Document Analysis assistant. \nExtract all important legal clauses from the document. \nInclude clause names, descriptions, and relevant sections if possible.\n\nDocument Content:\n{{documentDataUri}}\n\nOutput:\n- List each clause clearly.\n- Provide short explanation or context for each clause.' },
+  { value: 'party-details', label: 'Party Details', prompt: 'You are a Legal Document Analysis assistant. \nList all parties mentioned in the document along with their roles and responsibilities.\n\nDocument Content:\n{{documentDataUri}}\n\nOutput:\n- Party Name\n- Role\n- Responsibilities or obligations mentioned in the document.' },
+  { value: 'dates-deadlines', label: 'Dates & Deadlines', prompt: 'You are a Legal Document Analysis assistant. \nExtract all dates, deadlines, and timelines mentioned in the document. \nInclude the context for each date (e.g., payment due date, contract expiration).\n\nDocument Content:\n{{documentDataUri}}\n\nOutput:\n- Date / Deadline\n- Description / Context\n- Reference page/section if available' },
+  { value: 'amounts-payments', label: 'Amounts / Payments', prompt: 'You are a Legal Document Analysis assistant. \nExtract all monetary values, financial obligations, or penalties mentioned in the document. \nProvide the context for each amount.\n\nDocument Content:\n{{documentDataUri}}\n\nOutput:\n- Amount / Payment\n- Description / Context\n- Associated party or clause' },
+  { value: 'legal-risks', label: 'Legal Risks', prompt: 'You are a Legal Document Analysis assistant. \nAnalyze the document and identify any potential legal risks, liabilities, or exposures. \nProvide clear explanations for each risk.\n\nDocument Content:\n{{documentDataUri}}\n\nOutput:\n- Risk description\n- Clause or section reference\n- Impact / Potential consequences' },
+  { value: 'authorities-roles', label: 'Authorities & Roles', prompt: 'You are a Legal Document Analysis assistant. \nExtract information about authorities, roles, and responsibilities from the document. \nOutput the results in a professional, readable, human-like summary report. \n- Avoid plain bullet points.\n- Use short paragraphs.\n- Bold important entities and roles.\n- Maintain clarity and flow.\n\nDocument Content:\n{{documentDataUri}}\n\nOutput:\n' },
+  { value: 'custom-query', label: 'Custom Query', prompt: 'You are a Legal Document Analysis assistant. \nAnswer the user’s specific question based on the document content. \nIf the answer is not in the document, say: "This information is not present in the document."\n\nDocument Content:\n{{documentDataUri}}\n\nUser Question:\n{{customQuery}}\n\nOutput:\n- Provide a clear, precise answer.\n- Include references to the document if applicable.' },
 ];
 
 export function DocumentReview() {
@@ -103,7 +104,7 @@ export function DocumentReview() {
         });
         return;
       }
-      finalPrompt += customQuery;
+      finalPrompt = finalPrompt.replace('{{customQuery}}', customQuery);
     }
 
 
