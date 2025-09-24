@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useTheme } from '@/app/layout';
 import { auth } from '@/lib/firebase';
@@ -40,6 +40,7 @@ export function DashboardHeader({ selectedLlm, setSelectedLlm }: { selectedLlm: 
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
+  const { open, setOpen } = useSidebar();
 
   const role = searchParams.get('role') || 'public';
   const name = searchParams.get('name') || 'User';
@@ -100,8 +101,18 @@ export function DashboardHeader({ selectedLlm, setSelectedLlm }: { selectedLlm: 
             </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button variant="ghost" size="icon"><Minimize2 className="h-4 w-4"/></Button>
-        <Button variant="ghost" size="icon"><Maximize className="h-4 w-4"/></Button>
+        <div className="hidden md:flex items-center">
+            {open ? (
+                <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
+                    <Minimize2 className="h-4 w-4" />
+                </Button>
+            ) : (
+                <Button variant="ghost" size="icon" onClick={() => setOpen(true)}>
+                    <Maximize className="h-4 w-4" />
+                </Button>
+            )}
+        </div>
+
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
