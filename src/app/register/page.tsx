@@ -27,7 +27,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState('advocate');
+  const [role, setRole] = useState('public');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -68,11 +68,12 @@ export default function RegisterPage() {
       });
 
       // Save user info to Firestore
+      // This is the step that requires correct security rules
       await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
         name: name,
         email: user.email,
-        role: role
+        role: role,
       });
 
       toast({
@@ -81,13 +82,14 @@ export default function RegisterPage() {
       });
 
       const queryParams = new URLSearchParams({
-        name,
-        role,
+        name: name,
+        role: role,
         email: user.email!,
       });
 
       router.push(`/dashboard?${queryParams.toString()}`);
     } catch (error: any) {
+      console.error("Registration Error:", error);
       toast({
         variant: 'destructive',
         title: 'Registration Failed',
