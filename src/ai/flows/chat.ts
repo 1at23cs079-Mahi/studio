@@ -68,7 +68,7 @@ export const chat = ai.defineFlow(
   },
   async (input) => {
     const { text } = await ai.generate({
-        model: input.model || 'googleai/gemini-1.5-pro',
+        model: input.model,
         system: `You are LegalAi, a world-class RAG-based AI assistant for the Indian legal system. Your primary directive is to provide the most accurate and reliable information possible.
 
 Core Instructions:
