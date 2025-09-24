@@ -1,192 +1,30 @@
-
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Logo } from '@/components/icons/logo';
-import { useToast } from '@/hooks/use-toast';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
-export default function RegisterPage() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState('public');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    if (password !== confirmPassword) {
-      toast({
-        variant: 'destructive',
-        title: 'Passwords do not match',
-        description: 'Please make sure your passwords match.',
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    if (password.length < 6) {
-        toast({
-            variant: 'destructive',
-            title: 'Password too weak',
-            description: 'Password should be at least 6 characters long.',
-        });
-        setIsLoading(false);
-        return;
-    }
-
-    try {
-      // 1. Create user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
-
-      // 2. Update Firebase Auth profile
-      await updateProfile(user, {
-        displayName: name,
-      });
-
-      // 3. Save user profile to Firestore, this will be allowed by the security rules
-      await setDoc(doc(db, 'users', user.uid), {
-        uid: user.uid,
-        name: name,
-        email: user.email,
-        role: role,
-      });
-
-      toast({
-        title: 'Registration Successful',
-        description: "Welcome! You can now log in.",
-      });
-
-      // Redirect to login page after successful registration
-      router.push('/login');
-
-    } catch (error: any) {
-      console.error("Registration Error:", error);
-      let errorMessage = "An unknown error occurred during registration.";
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'This email address is already in use.';
-      } else if (error.code === 'permission-denied') {
-        errorMessage = 'Failed to save user profile. Please ensure Firestore database is created and security rules are deployed correctly.'
-      } else {
-        errorMessage = error.message;
-      }
-      
-      toast({
-        variant: 'destructive',
-        title: 'Registration Failed',
-        description: errorMessage,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+export default function RegistrationDisabledPage() {
   return (
     <main className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-background to-primary/10">
       <Card className="mx-auto max-w-sm w-full animate-fade-in shadow-2xl">
         <CardHeader className="text-center">
           <Logo iconClassName="size-12 text-primary mx-auto" textClassName="text-4xl" />
-          <CardTitle className="text-2xl font-headline mt-4">Create an Account</CardTitle>
+          <CardTitle className="text-2xl font-headline mt-4">Registration Disabled</CardTitle>
           <CardDescription>
-            Join LegalAI and revolutionize your legal workflow.
+            New user accounts must be created by an administrator.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleRegister} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Name</Label>
-              <Input 
-                id="name" 
-                placeholder="John Doe" 
-                required 
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="name@example.com"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-                <Label htmlFor="role">I am a...</Label>
-                <Select value={role} onValueChange={setRole} required>
-                    <SelectTrigger id="role" disabled={isLoading}>
-                        <SelectValue placeholder="Select your role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="advocate">Advocate</SelectItem>
-                        <SelectItem value="student">Law Student</SelectItem>
-                        <SelectItem value="public">Member of the Public</SelectItem>
-                        <SelectItem value="admin">Administrator</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                required 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="confirm-password">Confirm Password</Label>
-              <Input
-                id="confirm-password"
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+        <CardContent className="flex flex-col items-center justify-center gap-4">
+            <p className="text-sm text-center text-muted-foreground">
+                If you need an account, please contact a system administrator.
+            </p>
+            <Button asChild className="w-full">
+                <Link href="/login">
+                  Return to Login
+                </Link>
             </Button>
-          </form>
-          <div className="mt-4 text-center text-sm">
-            Already have an account?{' '}
-            <Link href="/login" className="underline">
-              Sign in
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </main>
