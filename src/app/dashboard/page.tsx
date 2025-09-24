@@ -185,12 +185,20 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {quickAccess.map(item => {
             const search = new URLSearchParams(searchParams.toString());
-            if (item.command) {
-                search.set('command', item.command);
-            } else {
+            let href = '';
+
+            if (item.title === 'Document Analysis') {
                 search.delete('command');
+                href = `/dashboard/document-review?${search.toString()}`;
+            } else {
+                if (item.command) {
+                    search.set('command', item.command);
+                } else {
+                    search.delete('command');
+                }
+                href = `/dashboard/case-management?${search.toString()}`;
             }
-            const href = `/dashboard/case-management?${search.toString()}`
+
             return (
                 <QuickAccessTile
                     key={item.title}
