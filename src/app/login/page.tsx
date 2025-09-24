@@ -72,19 +72,32 @@ export default function LoginPage() {
     setIsLoading(true);
 
     // --- DEMO MODE ---
-    if (email === 'demo@legalai.com' && password === 'password') {
-        toast({
-            title: 'Demo Login Successful',
-            description: 'Welcome, Demo Advocate!',
-        });
-        const queryParams = new URLSearchParams({
-            name: 'Demo Advocate',
-            role: 'advocate',
-            email: 'demo@legalai.com',
-        });
-        router.push(`/dashboard?${queryParams.toString()}`);
-        setIsLoading(false);
-        return;
+    if (password === 'password') {
+        let demoUser = null;
+        if (email === 'advocate@legalai.com') {
+            demoUser = { name: 'Demo Advocate', role: 'advocate', email: 'advocate@legalai.com' };
+        } else if (email === 'student@legalai.com') {
+            demoUser = { name: 'Demo Student', role: 'student', email: 'student@legalai.com' };
+        } else if (email === 'public@legalai.com') {
+            demoUser = { name: 'Demo User', role: 'public', email: 'public@legalai.com' };
+        } else if (email === 'admin@legalai.com') {
+            demoUser = { name: 'Demo Admin', role: 'advocate', email: 'admin@legalai.com' }; // Admin uses advocate role for now
+        }
+
+        if (demoUser) {
+            toast({
+                title: 'Demo Login Successful',
+                description: `Welcome, ${demoUser.name}!`,
+            });
+            const queryParams = new URLSearchParams({
+                name: demoUser.name,
+                role: demoUser.role,
+                email: demoUser.email,
+            });
+            router.push(`/dashboard?${queryParams.toString()}`);
+            setIsLoading(false);
+            return;
+        }
     }
     // --- END DEMO MODE ---
 
@@ -235,5 +248,3 @@ export default function LoginPage() {
     </main>
   );
 }
-
-    
