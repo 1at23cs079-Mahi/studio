@@ -103,6 +103,18 @@ export function DashboardSidebar() {
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === '/dashboard/document-review'}
+                        tooltip={{ children: 'Document Review', side: 'right' }}
+                    >
+                        <Link href={`/dashboard/document-review?${queryString}`}>
+                            <FileText />
+                            <span>Document Review</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
             </SidebarMenu>
         </div>
         <SidebarSeparator />

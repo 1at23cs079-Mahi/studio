@@ -9,3 +9,4 @@ import '@/ai/flows/search-case-law.ts';
 import '@/ai/flows/transcribe-audio.ts';
 import '@/ai/flows/translate-text.ts';
 import '@/ai/flows/chat.ts';
+import '@/ai/flows/explain-legal-term.ts';

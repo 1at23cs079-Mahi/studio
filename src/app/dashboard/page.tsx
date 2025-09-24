@@ -64,6 +64,12 @@ const roleConfig = {
                 command: ''
             },
             {
+                title: "Document Review",
+                description: "Upload a document for AI-powered analysis and review.",
+                icon: FileText,
+                command: 'review'
+            },
+            {
                 title: "Legal Terminology",
                 description: "Get simple explanations for complex legal terms.",
                 icon: BookOpen,
@@ -92,6 +98,12 @@ const roleConfig = {
                 description: "Search for case law, statutes, and legal articles for your research.",
                 icon: SearchIcon,
                 command: 'search'
+            },
+             {
+                title: "Document Review",
+                description: "Upload a document for AI-powered analysis and review.",
+                icon: FileText,
+                command: 'review'
             },
             {
                 title: "Translate Legal Text",
@@ -191,6 +203,9 @@ export default function DashboardPage() {
             if (item.title === 'Legal Terminology') {
                 search.delete('command');
                 href = `/dashboard/legal-terminology?${search.toString()}`;
+            } else if (item.title === 'Document Review') {
+                search.delete('command');
+                href = `/dashboard/document-review?${search.toString()}`;
             } else {
                 if (item.command) {
                     search.set('command', item.command);
