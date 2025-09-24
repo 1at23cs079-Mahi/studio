@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState('advocate');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -70,7 +72,7 @@ export default function RegisterPage() {
         uid: user.uid,
         name: name,
         email: user.email,
-        role: 'advocate' // Default role
+        role: role
       });
 
       toast({
@@ -78,7 +80,13 @@ export default function RegisterPage() {
         description: "You're now part of the community!",
       });
 
-      router.push('/dashboard');
+      const queryParams = new URLSearchParams({
+        name,
+        role,
+        email: user.email!,
+      });
+
+      router.push(`/dashboard?${queryParams.toString()}`);
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -124,6 +132,19 @@ export default function RegisterPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
               />
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor="role">I am a...</Label>
+                <Select value={role} onValueChange={setRole} required>
+                    <SelectTrigger id="role" disabled={isLoading}>
+                        <SelectValue placeholder="Select your role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="advocate">Advocate</SelectItem>
+                        <SelectItem value="student">Law Student</SelectItem>
+                        <SelectItem value="public">Member of the Public</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>

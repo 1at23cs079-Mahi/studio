@@ -20,7 +20,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Search, Sparkles, User, LogOut, LifeBuoy, Sun, Moon, Laptop } from 'lucide-react';
+import { Search, Sparkles, User, LogOut, LifeBuoy, Sun, Moon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
