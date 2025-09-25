@@ -26,21 +26,17 @@ import {
   AnalyzeDocumentAndSuggestEditsInput,
 } from '@/ai/flows/analyze-document-and-suggest-edits';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '../ui/textarea';
 
 type AnalysisResult = {
   analysis: string;
 };
 
-type OutputFormat = 'paragraph' | 'bullet_points' | 'table';
-
 export function DocumentReview() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
-  const [outputFormat, setOutputFormat] = useState<OutputFormat>('paragraph');
   const [userQuery, setUserQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -89,7 +85,6 @@ export function DocumentReview() {
       const documentDataUri = await fileToDataUri(file);
       const input: AnalyzeDocumentAndSuggestEditsInput = { 
         documentDataUri,
-        outputFormat,
         userQuery: userQuery.trim() || undefined,
       };
       const response = await analyzeDocumentAndSuggestEdits(input);
@@ -177,27 +172,13 @@ export function DocumentReview() {
                 <Label htmlFor="user-query">Specific Instructions (Optional)</Label>
                 <Textarea
                     id="user-query"
-                    placeholder="e.g., 'Focus on the liability and termination clauses.' or 'Check for compliance with recent regulations.'"
+                    placeholder="e.g., 'Focus on the liability clauses and format the output as a table.'"
                     value={userQuery}
                     onChange={(e) => setUserQuery(e.target.value)}
                     className="min-h-[80px]"
                 />
             </div>
             
-            <div className="grid gap-2">
-                <Label htmlFor="output-format">Output Format</Label>
-                <Select value={outputFormat} onValueChange={(value) => setOutputFormat(value as OutputFormat)}>
-                    <SelectTrigger id="output-format" className="w-full">
-                        <SelectValue placeholder="Select format" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="paragraph">Paragraph</SelectItem>
-                        <SelectItem value="bullet_points">Bullet Points</SelectItem>
-                        <SelectItem value="table">Table</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-
             <Button onClick={handleReview} disabled={isLoading || !file} className="w-full">
               {isLoading ? (
                 <>

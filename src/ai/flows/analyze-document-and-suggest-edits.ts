@@ -20,15 +20,14 @@ const AnalyzeDocumentAndSuggestEditsInputSchema = z.object({
     .describe(
       "A legal document as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'. Supported file types: PDF, DOCX, TXT."
     ),
-  outputFormat: z.enum(['paragraph', 'bullet_points', 'table']).describe('The desired format for the analysis output.'),
-  userQuery: z.string().optional().describe('A specific instruction or question from the user to guide the analysis.'),
+  userQuery: z.string().optional().describe('A specific instruction from the user to guide the analysis, including the desired output format (e.g., "summarize in bullet points", "create a markdown table").'),
 });
 export type AnalyzeDocumentAndSuggestEditsInput = z.infer<
   typeof AnalyzeDocumentAndSuggestEditsInputSchema
 >;
 
 const AnalysisResultSchema = z.object({
-    analysis: z.string().describe("The full analysis of the document, formatted as requested by the user (paragraph, bullet_points, or table). This should include annotated clauses, suggested edits, and matching precedents all in one structured response."),
+    analysis: z.string().describe("The full analysis of the document, formatted as requested by the user. This should include annotated clauses, suggested edits, and matching precedents all in one structured response."),
 });
 
 const AnalyzeDocumentAndSuggestEditsOutputSchema = z.object({
@@ -82,7 +81,6 @@ const analyzeDocumentAndSuggestEditsPrompt = ai.definePrompt({
   prompt: `You are an expert legal analyst. Your task is to perform a Retrieval-Augmented Generation (RAG) analysis on the provided legal document.
 
 Document to Analyze: {{media url=documentDataUri}}
-Requested Output Format: {{{outputFormat}}}
 {{#if userQuery}}
 User's Specific Request: "{{{userQuery}}}"
 {{/if}}
@@ -97,11 +95,10 @@ Please perform the following actions in a two-step process:
     - **Suggested Redline Edits**: Specific, clear edits for problematic clauses.
     - **Matching Precedent**: The relevant legal precedents retrieved from the 'legalSearch' tool that support your recommendations. Cite the sources.
 
-You MUST format your entire response according to the 'Requested Output Format'.
-
-- If 'paragraph', provide a detailed, narrative-style report.
-- If 'bullet_points', use clear headings and nested bullet points for each section (Clauses, Edits, Precedents).
-- If 'table', create a well-structured Markdown table with columns for "Clause", "Issue", "Suggested Edit", and "Supporting Precedent".
+You MUST intelligently determine the output format from the User's Specific Request.
+- If the user asks for a 'table', create a well-structured Markdown table with columns for "Clause", "Issue", "Suggested Edit", and "Supporting Precedent".
+- If the user asks for 'bullet points' or a 'summary', use clear headings and nested bullet points for each section (Clauses, Edits, Precedents).
+- If the user does not specify a format, provide a detailed, narrative-style report in well-structured paragraphs.
 
 Return your entire analysis as a single JSON object with one key: "analysis". Do not include any other text or formatting in your response.
 
