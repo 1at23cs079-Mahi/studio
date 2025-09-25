@@ -36,12 +36,13 @@ const prompt = ai.definePrompt({
   input: { schema: TranslateTextInputSchema },
   output: { schema: TranslateTextOutputSchema },
   prompt: `You are a translation expert specializing in legal terminology for Indian languages.
+  The supported languages are: Kannada, Telugu, Tamil, Marathi, Hindi, and English.
   Translate the following text to {{{targetLanguage}}}. Preserve the legal nuance and context.
 
   Text:
   "{{{text}}}"
 
-  Return only the translated text.
+  Return only the translated text. Do not add any commentary or introductory text.
   `,
 });
 
