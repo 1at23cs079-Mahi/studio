@@ -61,6 +61,8 @@ Please perform the following actions:
 3.  **Find Matching Precedent**: For each suggested edit, provide relevant legal precedents or statutory provisions that support your recommendation. Cite sources where possible.
 
 Return your entire analysis as a single JSON object with the keys "annotatedClauses", "suggestedEdits", and "matchingPrecedent". Do not include any other text or formatting in your response.
+
+**Disclaimer**: The analysis provided is for informational purposes only and does not constitute legal advice. It is an automated review and may contain errors or omissions. Always consult with a qualified legal professional for advice on your specific situation. LegalAI is not liable for any actions taken based on this analysis.
 `,
 });
 
