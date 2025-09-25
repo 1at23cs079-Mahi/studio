@@ -147,7 +147,7 @@ export function DashboardSidebar() {
                      <SidebarMenuItem key={convo.id}>
                         <SidebarMenuButton 
                              asChild
-                             isActive={pathname === `/dashboard/case-management`} // will be `/chat/${convo.id}`
+                             isActive={pathname.startsWith(`/dashboard/case-management`)} // will be `/chat/${convo.id}`
                              tooltip={{ children: convo.title, side: 'right' }}
                         >
                             <Link href={`/dashboard/case-management?${queryString}`}>
