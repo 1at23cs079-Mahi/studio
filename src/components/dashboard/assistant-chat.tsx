@@ -45,6 +45,12 @@ const TypingIndicator = () => (
   </div>
 );
 
+const ListeningIndicator = () => (
+  <div className="flex items-center justify-center">
+    <Bot className="h-5 w-5 text-primary/70 animate-pulse-listening" />
+  </div>
+);
+
 // Memoize the message component to prevent re-renders
 const MemoizedMessage = memo(function Message({ message, onRetry }: { message: Message; onRetry: (messageId: string) => void }) {
   const { toast } = useToast();
@@ -262,9 +268,13 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
             disabled={isLoading}
           />
           <div className="absolute top-1/2 -translate-y-1/2 left-3 flex items-center">
-             <Button type="button" size="icon" variant="ghost" disabled={isLoading}>
+             {input.length > 0 && !isLoading ? (
+              <ListeningIndicator />
+             ) : (
+              <Button type="button" size="icon" variant="ghost" disabled={isLoading}>
                 <Paperclip className="h-5 w-5 text-muted-foreground" />
-             </Button>
+              </Button>
+             )}
           </div>
           <div className="absolute top-1/2 -translate-y-1/2 right-3 flex items-center">
             <Button type="submit" size="sm" disabled={isLoading || !input.trim()}>
