@@ -258,16 +258,16 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
                     handleFormSubmit(e);
                 }
             }}
+            disabled={isLoading}
           />
           <div className="absolute top-1/2 -translate-y-1/2 left-3 flex items-center">
-             <Button type="button" size="icon" variant="ghost">
+             <Button type="button" size="icon" variant="ghost" disabled={isLoading}>
                 <Paperclip className="h-5 w-5 text-muted-foreground" />
              </Button>
           </div>
           <div className="absolute top-1/2 -translate-y-1/2 right-3 flex items-center">
             <Button type="submit" size="sm" disabled={isLoading || !input.trim()}>
-              <Send className="h-4 w-4 mr-2" />
-              Send
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </div>
         </form>

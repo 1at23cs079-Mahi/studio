@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/icons/logo';
-import { Github, Chrome } from 'lucide-react';
+import { Github, Chrome, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
@@ -30,6 +30,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<'google' | 'github' | null>(null);
 
   const handleSuccessfulLogin = async (user: any) => {
     let name = user.displayName || 'User';
@@ -129,7 +130,7 @@ export default function LoginPage() {
   };
 
   const handleSocialLogin = async (provider: 'google' | 'github') => {
-    setIsLoading(true);
+    setSocialLoading(provider);
     const authProvider = provider === 'google' ? new GoogleAuthProvider() : new GithubAuthProvider();
     try {
       const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
@@ -154,7 +155,7 @@ export default function LoginPage() {
         description: error.message,
       });
     } finally {
-      setIsLoading(false);
+      setSocialLoading(null);
     }
   };
 
@@ -206,7 +207,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
+                  disabled={isLoading || !!socialLoading}
                 />
               </div>
               <div className="grid gap-2">
@@ -216,7 +217,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={handleForgotPassword}
                     className="ml-auto inline-block text-sm underline"
-                    disabled={isLoading}
+                    disabled={isLoading || !!socialLoading}
                   >
                     Forgot your password?
                   </button>
@@ -227,24 +228,26 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
+                  disabled={isLoading || !!socialLoading}
                 />
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox id="remember-me" checked={rememberMe} onCheckedChange={(checked) => setRememberMe(checked as boolean)} />
                 <Label htmlFor="remember-me">Remember me</Label>
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Signing In...' : 'Sign In'}
+              <Button type="submit" className="w-full" disabled={isLoading || !!socialLoading}>
+                {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing In...</> : 'Sign In'}
               </Button>
             </form>
             <Separator className="my-2" />
             <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" onClick={() => handleSocialLogin('google')} disabled={isLoading}>
-                    <Chrome className="mr-2 h-4 w-4" /> Google
+                <Button variant="outline" onClick={() => handleSocialLogin('google')} disabled={isLoading || !!socialLoading}>
+                    {socialLoading === 'google' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Chrome className="mr-2 h-4 w-4" />}
+                     Google
                 </Button>
-                <Button variant="outline" onClick={() => handleSocialLogin('github')} disabled={isLoading}>
-                    <Github className="mr-2 h-4 w-4" /> GitHub
+                <Button variant="outline" onClick={() => handleSocialLogin('github')} disabled={isLoading || !!socialLoading}>
+                    {socialLoading === 'github' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Github className="mr-2 h-4 w-4" />}
+                     GitHub
                 </Button>
             </div>
           </div>
