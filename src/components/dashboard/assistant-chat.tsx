@@ -178,7 +178,7 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
         role: 'model',
         content: response.content,
         avatar: botAvatar,
-        name: 'Lexica',
+        name: 'Legal AI',
       };
       setMessages(prev => [...prev, modelMessage]);
 
@@ -189,7 +189,7 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
         role: 'model',
         content: "⚠️ API failed. Please try again.",
         avatar: botAvatar,
-        name: 'Lexica',
+        name: 'Legal AI',
         error: true,
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -238,7 +238,7 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
              {isLoading && (
               <div className="flex items-start gap-3">
                 <Avatar className="h-8 w-8">
-                    <AvatarImage src={botAvatar} alt="Lexica" />
+                    <AvatarImage src={botAvatar} alt="Legal AI" />
                     <AvatarFallback>L</AvatarFallback>
                 </Avatar>
                 <div className="max-w-lg rounded-xl px-4 py-2.5 bg-card text-card-foreground shadow-sm">
