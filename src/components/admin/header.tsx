@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   Home,
   Users,
@@ -58,6 +58,9 @@ export function AdminHeader() {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="sm:max-w-xs">
+          <SheetHeader>
+            <SheetTitle className="sr-only">Admin Menu</SheetTitle>
+          </SheetHeader>
           <nav className="grid gap-6 text-lg font-medium">
             <Link
               href="/admin/dashboard"
