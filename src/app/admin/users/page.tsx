@@ -45,11 +45,14 @@ export default function AdminUsersPage() {
   const firestore = useFirestore();
   
   const usersQuery = useMemo(() => {
-    if (!firestore) return null;
+    // Only create the query if the user is authenticated and firestore is available
+    if (!firestore || !authUser) return null;
     return collection(firestore, 'users');
-  }, [firestore]);
+  }, [firestore, authUser]);
 
-  const { data: users = [], isLoading: isUsersLoading, error } = useCollection<User>(usersQuery);
+  const { data: users = [], isLoading: isUsersLoading, error } = useCollection<User>(usersQuery, {
+    disabled: !authUser, // Disable the hook if there's no authenticated user
+  });
 
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -58,7 +61,7 @@ export default function AdminUsersPage() {
     (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
   
-  const isLoading = isAuthLoading || isUsersLoading;
+  const isLoading = isAuthLoading || (isUsersLoading && authUser);
 
   return (
     <div className="flex flex-col w-full">
@@ -119,6 +122,7 @@ export default function AdminUsersPage() {
                                             <AlertTriangle className="h-8 w-8" />
                                             <p className="font-semibold">An Error Occurred</p>
                                             <p className="text-sm">{error.message}</p>
+                                            <p className="text-xs text-muted-foreground mt-2">Ensure your Firestore security rules allow reads on the 'users' collection.</p>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -127,7 +131,7 @@ export default function AdminUsersPage() {
                                     <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
                                         <div className="flex flex-col items-center gap-2">
                                             <AlertTriangle className="h-8 w-8" />
-                                            <p>You must be logged in to view users.</p>
+                                            <p>You must be logged in as an administrator to view users.</p>
                                         </div>
                                     </TableCell>
                                 </TableRow>
