@@ -212,8 +212,8 @@ export default function LoginPage() {
   return (
     <main className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-background to-primary/10">
       <Card className="mx-auto max-w-sm w-full animate-fade-in shadow-2xl">
-        <CardHeader className="text-center">
-          <Logo iconClassName="size-12 text-primary mx-auto" textClassName="text-4xl" />
+        <CardHeader className="text-left">
+          <Logo iconClassName="size-12 text-primary" textClassName="text-4xl" className="justify-start" />
           <CardTitle className="text-2xl font-headline mt-4">Welcome Back</CardTitle>
           <CardDescription>Enter your credentials to access your account</CardDescription>
         </CardHeader>
