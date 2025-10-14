@@ -43,24 +43,24 @@ This document outlines the tasks and evaluation criteria for setting up the basi
 
 ## 2. Evaluation Criteria
 
-Each task will be evaluated based on the following criteria, with each criterion worth 5 marks.
+Each task will be evaluated based on the following criteria, with each criterion worth 2 marks.
 
-### 1. Feature Completion
-*   **5 Marks (Excellent)**: All key components of the task are fully implemented and functional as per the objectives. The structure is complete and ready for further development.
-*   **3 Marks (Good)**: Most key components are implemented, but some minor parts are missing or incomplete. The core structure is present.
-*   **1 Mark (Needs Improvement)**: Significant parts of the task are missing. The structure is incomplete and not ready for the next phase.
+### 1. Component Selection
+*   **2 Marks (Excellent)**: All selected components (UI libraries, backend services) are optimal for the task, demonstrating a clear understanding of project requirements.
+*   **1 Mark (Good)**: Most component selections are appropriate, but some alternatives might have been better.
+*   **0 Marks (Needs Improvement)**: Component selection is poor or inappropriate for the task.
 
-### 2. Integration of Components
-*   **5 Marks (Excellent)**: All components (UI, backend, services) are seamlessly integrated. Data flows correctly between the frontend and backend. Hooks and providers are used effectively.
-*   **3 Marks (Good)**: Components are mostly integrated, but there are some minor issues with data flow or state management.
-*   **1 Mark (Needs Improvement)**: Components are poorly integrated, leading to crashes, data inconsistencies, or a non-functional UI.
+### 2. Hardware/Simulation Setup
+*   **2 Marks (Excellent)**: The simulation environment is set up correctly and efficiently. The configuration is stable and well-documented.
+*   **1 Mark (Good)**: The setup is functional but may have minor instabilities or could be configured more efficiently.
+*   **0 Marks (Needs Improvement)**: The setup is non-functional or poorly configured.
 
-### 3. Innovation & Tech Use
-*   **5 Marks (Excellent)**: The project effectively uses modern technologies and best practices (Next.js App Router, Server Components, Genkit, custom hooks). The architecture is clean, scalable, and forward-thinking.
-*   **3 Marks (Good)**: The project uses the specified technologies, but the implementation could be cleaner or more efficient. Some legacy patterns might be present.
-*   **1 Mark (Needs Improvement)**: The technology stack is not used correctly, or the architecture is outdated and difficult to maintain.
+### 3. Initial Code Development
+*   **2 Marks (Excellent)**: The initial code is clean, well-structured, and follows best practices. The implementation is robust and scalable.
+*   **1 Mark (Good)**: The code is functional but could be cleaner or better structured. Some minor issues may be present.
+*   **0 Marks (Needs Improvement)**: The code is messy, poorly structured, or contains significant errors.
 
-### 4. Usability & Functionality
-*   **5 Marks (Excellent)**: The user interface is intuitive, responsive, and error-free. All interactive elements work as expected. The application provides a smooth and professional user experience.
-*   **3 Marks (Good)**: The application is functional, but there are some minor UI/UX issues, such as non-responsive elements or confusing navigation.
-*   **1 Mark (Needs Improvement)**: The application is difficult to use, buggy, or non-functional. Core features are broken or inaccessible.
+### 4. Working Demo
+*   **2 Marks (Excellent)**: The feature demo is fully functional, intuitive, and bug-free. It perfectly showcases the intended functionality.
+*   **1 Mark (Good)**: The demo is mostly functional but has some minor bugs or usability issues.
+*   **0 Marks (Needs Improvement)**: The demo is non-functional, buggy, or fails to demonstrate the core feature.
