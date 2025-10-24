@@ -49,11 +49,3 @@ export const useFirebase = () => {
 export const useFirebaseApp = () => useFirebase().app;
 export const useAuth = () => useFirebase().auth;
 export const useFirestore = () => useFirebase().db;
-
-export function useMemoFirebase<T>(
-  factory: () => T,
-  deps: React.DependencyList
-) {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useMemo(factory, deps);
-}

@@ -16,7 +16,7 @@ import {
   FirestoreError,
   QuerySnapshot,
 } from 'firebase/firestore';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useAuth, useFirestore } from './provider';
 import { useUser } from './use-user';
 import { errorEmitter } from './error-emitter';
@@ -35,8 +35,10 @@ export function useCollection<T>(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<FirestoreError>();
 
+  const memoizedQuery = useMemo(() => query, [JSON.stringify(query)]);
+
   useEffect(() => {
-    if (!query || disabled) {
+    if (!memoizedQuery || disabled) {
       setData(undefined);
       setIsLoading(false);
       return;
@@ -45,7 +47,7 @@ export function useCollection<T>(
     setIsLoading(true);
 
     const unsubscribe = onSnapshot(
-      query,
+      memoizedQuery,
       (snapshot: QuerySnapshot) => {
         const data: any[] = [];
         snapshot.forEach((doc) => {
@@ -56,7 +58,7 @@ export function useCollection<T>(
       },
       (err: FirestoreError) => {
         const permissionError = new FirestorePermissionError({
-            path: query.path,
+            path: memoizedQuery.path,
             operation: 'list',
         });
         errorEmitter.emit('permission-error', permissionError);
@@ -67,7 +69,7 @@ export function useCollection<T>(
     );
 
     return () => unsubscribe();
-  }, [query, disabled]);
+  }, [memoizedQuery, disabled]);
 
   return { data, isLoading, error };
 }

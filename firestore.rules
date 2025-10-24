@@ -1,13 +1,30 @@
-
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // This rule allows a newly created user to create their own user document,
-    // but no one else can. After creation, only the user themselves can access it.
-    // This is the key to fixing the registration failure.
+
+    // Helper functions
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Users Collection
+    // - Authenticated users can create their own user document.
+    // - A user can read or update their own document.
+    // - Admins can read, write, and list all user documents.
     match /users/{userId} {
-      allow create: if request.auth != null;
-      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && isOwner(userId);
+      allow read, update: if isOwner(userId) || isAdmin();
+      allow list, delete: if isAdmin();
+    }
+    
+    // Default Deny: All other paths are closed by default.
+    match /{path=**}/documents/{document} {
+      allow read, write: if false;
     }
   }
 }
