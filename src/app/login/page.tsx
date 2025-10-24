@@ -100,14 +100,14 @@ export default function LoginPage() {
     // --- DEMO MODE ---
     if (password === 'password') {
         let demoUser: { name: string; role: string; email: string; uid?: string } | null = null;
-        if (email === 'advocate@legalai.com') {
+        if (email === 'admin@legalai.com') {
+            demoUser = { uid: 'demo-admin', name: 'Demo Admin', role: 'admin', email: 'admin@legalai.com' };
+        } else if (email === 'advocate@legalai.com') {
             demoUser = { uid: 'demo-advocate', name: 'Demo Advocate', role: 'advocate', email: 'advocate@legalai.com' };
         } else if (email === 'student@legalai.com') {
             demoUser = { uid: 'demo-student', name: 'Demo Student', role: 'student', email: 'student@legalai.com' };
         } else if (email === 'public@legalai.com') {
             demoUser = { uid: 'demo-public', name: 'Demo User', role: 'public', email: 'public@legalai.com' };
-        } else if (email === 'admin@legalai.com') {
-            demoUser = { uid: 'demo-admin', name: 'Demo Admin', role: 'admin', email: 'admin@legalai.com' };
         }
 
         if (demoUser) {
