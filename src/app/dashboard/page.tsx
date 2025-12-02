@@ -18,7 +18,8 @@ import {
   Languages,
   AlertTriangle,
   FileSignature,
-  Voicemail
+  Voicemail,
+  Video,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -54,96 +55,72 @@ function QuickAccessTile({
   );
 }
 
+const allTools = [
+    {
+        title: "LegalAI Chat",
+        description: "Conversational AI for legal queries, drafting, and analysis.",
+        icon: Briefcase,
+        href: "/dashboard/case-management"
+    },
+    {
+        title: "Draft Document",
+        description: "Generate drafts of petitions, agreements, and more with AI.",
+        icon: FileSignature,
+        href: "/dashboard/draft-document"
+    },
+    {
+        title: "Document Review",
+        description: "Upload a document for AI-powered analysis and review.",
+        icon: FileText,
+        href: "/dashboard/document-review"
+    },
+    {
+        title: "Case Law Search",
+        description: "Find relevant case law from our extensive legal database.",
+        icon: Gavel,
+        href: "/dashboard/search"
+    },
+    {
+        title: "Legal Terminology",
+        description: "Get simple explanations for complex legal terms.",
+        icon: BookOpen,
+        href: "/dashboard/legal-terminology"
+    },
+    {
+        title: "Text Translation",
+        description: "Translate legal text between supported Indian languages.",
+        icon: Languages,
+        href: "/dashboard/translation"
+    },
+    {
+        title: "Voice Translation",
+        description: "Speak and translate conversations into different languages.",
+        icon: Voicemail,
+        href: "/dashboard/voice-translation"
+    },
+    {
+        title: "Video Summary",
+        description: "Upload a video file to get an AI-powered summary.",
+        icon: Video,
+        href: "/dashboard/video-summary"
+    }
+];
+
 const roleConfig = {
     advocate: {
         welcome: "Welcome back, Advocate!",
         description: "Your AI-powered legal assistant is ready to help you win your next case.",
-        quickAccess: [
-            {
-                title: "LegalAI Chat",
-                description: "Engage in conversational AI for case management and legal queries.",
-                icon: Briefcase,
-                href: "/dashboard/case-management"
-            },
-            {
-                title: "Draft Document",
-                description: "Generate drafts of petitions, agreements, and more with AI.",
-                icon: FileSignature,
-                href: "/dashboard/draft-document"
-            },
-            {
-                title: "Document Review",
-                description: "Upload a document for AI-powered analysis and review.",
-                icon: FileText,
-                href: "/dashboard/document-review"
-            },
-            {
-                title: "Case Law Search",
-                description: "Find relevant case law from our extensive legal database.",
-                icon: Gavel,
-                href: "/dashboard/search"
-            }
-        ]
+        quickAccess: allTools
     },
     student: {
         welcome: "Welcome, Law Student!",
         description: "Your AI study partner for acing your exams and moot courts.",
-         quickAccess: [
-            {
-                title: "LegalAI Chat",
-                description: "Understand complex legal concepts and summarize cases.",
-                icon: BookOpen,
-                href: "/dashboard/case-management"
-            },
-            {
-                title: "Legal Research",
-                description: "Search for case law, statutes, and legal articles for your research.",
-                icon: SearchIcon,
-                href: "/dashboard/search"
-            },
-             {
-                title: "Document Review",
-                description: "Upload a document for AI-powered analysis and review.",
-                icon: FileText,
-                href: "/dashboard/document-review"
-            },
-            {
-                title: "Voice Translation",
-                description: "Speak and translate conversations into different languages.",
-                icon: Voicemail,
-                href: "/dashboard/voice-translation"
-            },
-        ]
+        quickAccess: allTools
     },
     public: {
         welcome: "Welcome!",
         description: "Your guide to an introduction to the Indian legal system.",
-         quickAccess: [
-            {
-                title: "LegalAI Chat",
-                description: "Ask legal questions, understand your rights, and get information.",
-                icon: Briefcase,
-                href: "/dashboard/case-management"
-            },
-            {
-                title: "Legal Terminology",
-                description: "Get simple explanations for complex legal terms.",
-                icon: BookOpen,
-                href: "/dashboard/legal-terminology"
-            },
-            {
-                title: "Public Interest Litigation",
-                description: "Learn how to file a PIL and its procedures.",
-                icon: Gavel,
-                href: "/dashboard/case-management?command=pil"
-            },
-             {
-                title: "Voice Translation",
-                description: "Speak and translate conversations into different languages.",
-                icon: Voicemail,
-                href: "/dashboard/voice-translation"
-            },
-        ]
+        quickAccess: allTools
     }
 }
 
@@ -203,7 +180,7 @@ export default function DashboardPage() {
         <h3 className="text-lg md:text-xl font-semibold font-headline mb-4">
           Quick Access
         </h3>
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
           {quickAccess.map(item => {
             const preservedSearchParams = new URLSearchParams(searchParams.toString());
             let finalHref = item.href;
