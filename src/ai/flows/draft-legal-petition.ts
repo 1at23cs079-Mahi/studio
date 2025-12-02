@@ -1,68 +1,223 @@
+'use client';
 
-'use server';
+import {
+  Sidebar,
+  SidebarBody,
+  SidebarContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarFooter,
+  SidebarSeparator,
+} from '@/components/ui/sidebar';
+import {
+  Settings,
+  LogOut,
+  MessageSquare,
+  Plus,
+  FileText,
+  Home,
+  BookOpen,
+  Gavel,
+  Mic,
+  Languages,
+  FileSignature,
+} from 'lucide-react';
+import { Logo } from '@/components/icons/logo';
+import Link from 'next/link';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
+import { useFirebase } from '@/firebase';
+import { ScrollArea } from '../ui/scroll-area';
 
-/**
- * @fileOverview An AI agent for drafting legal petitions.
- *
- * - draftLegalPetition - A function that handles the petition drafting process.
- * - DraftLegalPetitionInput - The input type for the draftLegalPetition function.
- * - DraftLegalPetitionOutput - The return type for the draftLegalPetition function.
- */
+const conversations = [
+    { id: '1', title: 'Anticipatory Bail under 438' },
+    { id: '2', title: 'Civil Suit for Recovery' },
+    { id: '3', title: 'Drafting a Lease Agreement' },
+    { id: '4', title: 'PIL for Environmental Issue' },
+    { id: '5', title: 'Consumer Complaint about Defective Product' },
+    { id: '6', title: 'Landmark Judgements on Article 21' },
+];
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+export function DashboardSidebar() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { toast } = useToast();
+  const { auth } = useFirebase();
 
-const DraftLegalPetitionInputSchema = z.object({
-  query: z.string().describe('The details of the legal petition to draft.'),
-  userRole: z
-    .enum(['Advocate', 'Student', 'Public'])
-    .describe('The role of the user.'),
-});
-export type DraftLegalPetitionInput = z.infer<typeof DraftLegalPetitionInputSchema>;
+  const role = searchParams.get('role');
+  const name = searchParams.get('name');
+  const email = searchParams.get('email');
 
-const DraftLegalPetitionOutputSchema = z.object({
-  draft: z.string().describe('The draft of the legal petition, formatted with proper headings, sections, and placeholders for copy-pasting into a document editor.'),
-});
-export type DraftLegalPetitionOutput = z.infer<typeof DraftLegalPetitionOutputSchema>;
+  const preservedSearchParams = new URLSearchParams();
+  if (role) preservedSearchParams.set('role', role);
+  if (name) preservedSearchParams.set('name', name);
+  if (email) preservedSearchParams.set('email', email);
+  const queryString = preservedSearchParams.toString();
+  
+  const handleLogout = async () => {
+    if (!auth) return;
+    try {
+      await auth.signOut();
+      toast({
+        title: 'Logged Out',
+        description: 'You have been successfully logged out.',
+      });
+      router.push('/login');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Logout Failed',
+        description: error.message,
+      });
+    }
+  };
 
-export async function draftLegalPetition(input: DraftLegalPetitionInput): Promise<DraftLegalPetitionOutput> {
-  return draftLegalPetitionFlow(input);
+
+  return (
+    <Sidebar collapsible="icon" className="group-data-[variant=inset]:bg-transparent">
+      <SidebarHeader>
+        <Logo iconClassName="text-sidebar-primary" />
+      </SidebarHeader>
+      <SidebarBody className="flex-1 overflow-hidden">
+        <div className="p-2">
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton 
+                        asChild
+                        isActive={pathname === '/dashboard'}
+                        tooltip={{ children: 'Dashboard', side: 'right' }}
+                    >
+                        <Link href={`/dashboard?${queryString}`}>
+                            <Home />
+                            <span>Dashboard</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === '/dashboard/draft-document'}
+                        tooltip={{ children: 'Draft Document', side: 'right' }}
+                    >
+                        <Link href={`/dashboard/draft-document?${queryString}`}>
+                            <FileSignature />
+                            <span>Draft Document</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === '/dashboard/document-review'}
+                        tooltip={{ children: 'Document Review', side: 'right' }}
+                    >
+                        <Link href={`/dashboard/document-review?${queryString}`}>
+                            <FileText />
+                            <span>Document Review</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === '/dashboard/transcription'}
+                        tooltip={{ children: 'Audio Transcription', side: 'right' }}
+                    >
+                        <Link href={`/dashboard/transcription?${queryString}`}>
+                            <Mic />
+                            <span>Audio Transcription</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === '/dashboard/search'}
+                        tooltip={{ children: 'Case Law Search', side: 'right' }}
+                    >
+                        <Link href={`/dashboard/search?${queryString}`}>
+                            <Gavel />
+                            <span>Case Law Search</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === '/dashboard/legal-terminology'}
+                        tooltip={{ children: 'Legal Terminology', side: 'right' }}
+                    >
+                        <Link href={`/dashboard/legal-terminology?${queryString}`}>
+                            <BookOpen />
+                            <span>Legal Terminology</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === '/dashboard/translation'}
+                        tooltip={{ children: 'Translation', side: 'right' }}
+                    >
+                        <Link href={`/dashboard/translation?${queryString}`}>
+                            <Languages />
+                            <span>Translation</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </div>
+        <SidebarSeparator />
+         <div className="flex items-center justify-between p-2">
+            <p className="text-sm font-medium text-muted-foreground px-2 group-data-[collapsible=icon]:hidden">
+                Chats
+            </p>
+             <SidebarMenuButton size="icon" variant="ghost" className="h-8 w-8 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
+                <Plus className="h-4 w-4" />
+            </SidebarMenuButton>
+        </div>
+        <ScrollArea className="flex-1 px-2">
+            <SidebarMenu>
+                {conversations.map(convo => (
+                     <SidebarMenuItem key={convo.id}>
+                        <SidebarMenuButton 
+                             asChild
+                             isActive={pathname.startsWith(`/dashboard/case-management`)} // will be `/chat/${convo.id}`
+                             tooltip={{ children: convo.title, side: 'right' }}
+                        >
+                            <Link href={`/dashboard/case-management?${queryString}`}>
+                                <MessageSquare />
+                                <span>{convo.title}</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                ))}
+            </SidebarMenu>
+        </ScrollArea>
+
+      </SidebarBody>
+      <SidebarSeparator />
+      <SidebarFooter className="p-2">
+         <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip={{ children: 'Settings', side: 'right' }}>
+                    <Link href="#">
+                        <Settings />
+                        <span>Settings</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+                <SidebarMenuButton onClick={handleLogout} tooltip={{ children: 'Log out', side: 'right' }}>
+                    <LogOut />
+                    <span>Log Out</span>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+         </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
+  );
 }
-
-const prompt = ai.definePrompt({
-  name: 'draftLegalPetitionPrompt',
-  input: {schema: DraftLegalPetitionInputSchema},
-  output: {schema: DraftLegalPetitionOutputSchema},
-  prompt: `You are LegalAi, an AI assistant specialized in drafting legal petitions for the Indian legal system. Your task is to generate a clean, well-formatted, and ready-to-use draft of a legal petition based on the user's request.
-
-User Role: {{{userRole}}}
-
-Drafting Request: {{{query}}}
-
-**Instructions for Drafting:**
-1.  **Structure and Formatting**: Create a formal legal petition structure. Use clear headings for different sections. **Court and case title headings MUST be center-aligned.** For example:
-    IN THE SUPREME COURT OF INDIA
-    CIVIL ORIGINAL JURISDICTION
-    WRIT PETITION (CIVIL) NO. ___ OF 2024
-2.  **Placeholders**: Use clear, bracketed placeholders for all case-specific details that the user must fill in (e.g., "[Client's Name]", "[Address]", "[Date]", "[Name of Petitioner]", "[Name of Respondent]").
-3.  **Content Generation**: Based on the user's query, generate the core factual narrative ("MOST RESPECTFULLY SHOWETH:") and legal grounds in formal legal language. Number each paragraph.
-4.  **Whitespace and Alignment**: Use line breaks and indentation to ensure the document is perfectly aligned and readable. The final output should be formatted so it can be directly copied and pasted into a text editor or word processor without losing its structure.
-5.  **Role-Based Customization**:
-    - For an 'Advocate', the draft should be formal, comprehensive, and ready for court filing, with detailed legal arguments and placeholders for evidence.
-    - For a 'Student', the draft should be well-structured with annotations explaining the purpose of each clause, serving as a learning tool.
-    - For a 'Public' user, the draft should be a simplified pro-forma template with very clear explanations for each section and what information is needed.
-6.  **DO NOT INCLUDE DISCLAIMERS**: Your entire response must be only the legal draft itself. Do not add any introductory text or concluding remarks. The output must be the raw, formatted petition.
-  `,
-});
-
-const draftLegalPetitionFlow = ai.defineFlow(
-  {
-    name: 'draftLegalPetitionFlow',
-    inputSchema: DraftLegalPetitionInputSchema,
-    outputSchema: DraftLegalPetitionOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);

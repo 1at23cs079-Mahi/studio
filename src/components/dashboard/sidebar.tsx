@@ -100,12 +100,12 @@ export function DashboardSidebar() {
                 <SidebarMenuItem>
                     <SidebarMenuButton
                         asChild
-                        isActive={pathname === '/dashboard/draft-petition'}
-                        tooltip={{ children: 'Draft Petition', side: 'right' }}
+                        isActive={pathname === '/dashboard/draft-document'}
+                        tooltip={{ children: 'Draft Document', side: 'right' }}
                     >
-                        <Link href={`/dashboard/draft-petition?${queryString}`}>
+                        <Link href={`/dashboard/draft-document?${queryString}`}>
                             <FileSignature />
-                            <span>Draft Petition</span>
+                            <span>Draft Document</span>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>

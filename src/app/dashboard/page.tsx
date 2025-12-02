@@ -65,10 +65,10 @@ const roleConfig = {
                 href: "/dashboard/case-management"
             },
             {
-                title: "Draft Petition",
-                description: "Generate initial drafts of legal petitions with AI assistance.",
+                title: "Draft Document",
+                description: "Generate drafts of petitions, agreements, and more with AI.",
                 icon: FileSignature,
-                href: "/dashboard/draft-petition"
+                href: "/dashboard/draft-document"
             },
             {
                 title: "Document Review",

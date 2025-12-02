@@ -12,7 +12,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { searchCaseLawDatabase } from '@/services/legal-search';
-import { draftLegalPetition } from './draft-legal-petition';
+import { draftLegalDocument } from './draft-legal-document';
 import { explainLegalTerm } from './explain-legal-term';
 import { translateText } from './translate-text';
 
@@ -62,17 +62,17 @@ const legalSearchTool = ai.defineTool(
     }
 );
 
-// Tool for drafting legal petitions
-const draftPetitionTool = ai.defineTool({
-    name: 'draftLegalPetition',
-    description: "Drafts a legal petition based on the user's detailed request. The user must provide sufficient details about the case for the draft to be created.",
+// Tool for drafting legal documents
+const draftDocumentTool = ai.defineTool({
+    name: 'draftLegalDocument',
+    description: "Drafts a legal document like a petition, agreement, or affidavit based on the user's detailed request. The user must provide sufficient details for the draft to be created.",
     inputSchema: z.object({
-        query: z.string().describe('The details of the legal petition to draft.'),
+        query: z.string().describe('The details of the legal document to draft.'),
         userRole: z.enum(['Advocate', 'Student', 'Public']).describe('The role of the user.'),
     }),
     outputSchema: z.string(),
 }, async (input) => {
-    const result = await draftLegalPetition(input);
+    const result = await draftLegalDocument(input);
     return result.draft;
 });
 
@@ -112,7 +112,7 @@ export const chatPrompt = ai.definePrompt({
 
 Core Instructions:
 1.  **Prioritize Accuracy and Sourced Information**: Whenever a user asks a question that can be answered with case law or legal documents, you MUST use the 'legalSearch' tool.
-2.  **Intelligently Use Your Tools**: You have several tools. Use 'draftLegalPetition' for drafting, 'explainLegalTerm' for definitions, and 'translateText' for translations. Be proactive in using them when the user's intent is clear.
+2.  **Intelligently Use Your Tools**: You have several tools. Use 'draftLegalDocument' for drafting, 'explainLegalTerm' for definitions, and 'translateText' for translations. Be proactive in using them when the user's intent is clear.
 3.  **Cite Everything from Sources**: Any information you provide that comes from the 'legalSearch' tool must be attributed to its source. Use clear citations (e.g., "[Citation: AIR 1973 SC 1461]").
 4.  **Synthesize, Don't Paraphrase**: Analyze and synthesize information from sources to provide a comprehensive answer.
 5.  **Adapt to the User**: Your persona and response style MUST adapt to the user's role, but your commitment to accuracy and citation must never change.
@@ -126,7 +126,7 @@ Response Guidelines by Role:
 
 **Disclaimer for Public Users**: When the user role is 'Public', ALWAYS end your response with: "Please remember, this is for informational purposes only and is not legal advice. You should consult with a qualified legal professional for your specific situation."
 `,
-    tools: [legalSearchTool, draftPetitionTool, explainTermTool, translateTextTool],
+    tools: [legalSearchTool, draftDocumentTool, explainTermTool, translateTextTool],
     input: {
       schema: z.object({
         userRole: z.string(),
