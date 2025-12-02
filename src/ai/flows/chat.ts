@@ -15,6 +15,9 @@ import { searchCaseLawDatabase } from '@/services/legal-search';
 import { draftLegalDocument } from './draft-legal-document';
 import { explainLegalTerm } from './explain-legal-term';
 import { translateText } from './translate-text';
+import { analyzeDocumentAndSuggestEdits } from './analyze-document-and-suggest-edits';
+import { transcribeAudio } from './transcribe-audio';
+import { summarizeVideo } from './summarize-video';
 import { ModelReference } from 'genkit/model';
 
 const ChatInputSchema = z.object({
@@ -107,6 +110,43 @@ const translateTextTool = ai.defineTool({
     return result.translatedText;
 });
 
+const analyzeDocumentTool = ai.defineTool({
+    name: 'analyzeDocument',
+    description: 'Analyzes a legal document provided as a data URI. It can identify clauses, suggest edits, and find precedents.',
+    inputSchema: z.object({
+        documentDataUri: z.string().describe("A legal document as a data URI. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
+        userQuery: z.string().optional().describe('Specific instructions for the analysis (e.g., "summarize in bullet points").'),
+    }),
+    outputSchema: z.string(),
+}, async (input) => {
+    const result = await analyzeDocumentAndSuggestEdits(input);
+    return result.analysisResults;
+});
+
+const transcribeAudioTool = ai.defineTool({
+    name: 'transcribeAudio',
+    description: 'Transcribes audio to text. The user must provide an audio file as a data URI.',
+    inputSchema: z.object({
+        audioDataUri: z.string().describe("An audio file as a data URI. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
+    }),
+    outputSchema: z.string(),
+}, async (input) => {
+    const result = await transcribeAudio(input);
+    return result.transcript;
+});
+
+const summarizeVideoTool = ai.defineTool({
+    name: 'summarizeVideo',
+    description: 'Summarizes the content of a video file provided as a data URI.',
+    inputSchema: z.object({
+        videoDataUri: z.string().describe("A video file as a data URI. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
+    }),
+    outputSchema: z.string(),
+}, async (input) => {
+    const result = await summarizeVideo(input);
+    return result;
+});
+
 
 export const chatPrompt = ai.definePrompt({
     name: 'chatPrompt',
@@ -114,7 +154,7 @@ export const chatPrompt = ai.definePrompt({
 
 Core Instructions:
 1.  **Prioritize Indian Legal Sources**: Whenever a user asks a question that can be answered with case law or legal documents, you MUST use the 'legalSearch' tool to retrieve information from the Indian legal database.
-2.  **Intelligently Use Your Tools**: You have several tools. Use 'draftLegalDocument' for drafting documents compliant with Indian law, 'explainLegalTerm' for Indian legal definitions, and 'translateText' for Indian languages. Be proactive in using them when the user's intent is clear.
+2.  **Intelligently Use Your Tools**: You have several tools. Use them proactively when the user's intent is clear. For file-based operations like 'analyzeDocument', 'transcribeAudio', or 'summarizeVideo', you must ask the user to upload the relevant file first.
 3.  **Cite Everything from Sources**: Any information you provide that comes from the 'legalSearch' tool must be attributed to its Indian source. Use clear citations (e.g., "[Citation: AIR 1973 SC 1461]").
 4.  **Synthesize, Don't Paraphrase**: Analyze and synthesize information from sources to provide a comprehensive answer in the Indian context.
 5.  **Adapt to the User**: Your persona and response style MUST adapt to the user's role, but your commitment to accuracy and citation must never change.
@@ -128,7 +168,15 @@ Response Guidelines by Role:
 
 **Disclaimer for Public Users**: When the user role is 'Public', ALWAYS end your response with: "Please remember, this is for informational purposes only and is not legal advice. You should consult with a qualified legal professional for your specific situation."
 `,
-    tools: [legalSearchTool, draftDocumentTool, explainTermTool, translateTextTool],
+    tools: [
+        legalSearchTool, 
+        draftDocumentTool, 
+        explainTermTool, 
+        translateTextTool,
+        analyzeDocumentTool,
+        transcribeAudioTool,
+        summarizeVideoTool
+    ],
     input: {
       schema: z.object({
         userRole: z.string(),
@@ -148,7 +196,7 @@ export const chatWithTools = ai.defineFlow(
     stream: true,
   },
   async (input, streamingCallback) => {
-    const model = input.model ? ai.getModel(input.model as ModelReference) : ai.getModel(ai.model.name);
+    const model = input.model ? ai.getModel(input.model as ModelReference) : ai.getModel('googleai/gemini-1.5-pro');
     
     const {stream, response} = ai.generateStream({
         model,
@@ -170,3 +218,5 @@ export const chatWithTools = ai.defineFlow(
     };
   }
 );
+
+    
