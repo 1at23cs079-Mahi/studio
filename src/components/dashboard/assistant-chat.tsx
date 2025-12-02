@@ -22,7 +22,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import type { ModelId } from './header';
 import { CommandMenu } from './command-menu';
-import { useFlow } from '@genkit-ai/next/client';
+import { streamFlow } from '@genkit-ai/next/client';
 import { generateCaseTimeline } from '@/ai/flows/generate-case-timeline';
 import { chatWithTools, type ChatInput, type ChatOutput } from '@/ai/flows/chat';
 
@@ -121,6 +121,7 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   const name = searchParams.get('name') || 'User';
@@ -128,46 +129,6 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
   const userAvatar = `https://picsum.photos/seed/${email}/40/40`;
   const botAvatar = `https://picsum.photos/seed/bot/40/40`;
 
-  const { run, loading, output, error } = useFlow<ChatInput, ChatOutput>('/api/chat', {
-    onStart: (input) => {
-      const modelMessageId = `model-${Date.now()}`;
-      setMessages(prev => [...prev, {
-        id: modelMessageId,
-        role: 'model',
-        content: '',
-        avatar: botAvatar,
-        name: 'Legal AI',
-      }]);
-    },
-    onUpdate: (chunk) => {
-       if (chunk.role === 'model' && chunk.content) {
-        setMessages(prev => {
-          const lastMessage = prev[prev.length - 1];
-          if (lastMessage && lastMessage.role === 'model') {
-            return [
-              ...prev.slice(0, prev.length - 1),
-              { ...lastMessage, content: chunk.content },
-            ];
-          }
-          return prev;
-        });
-      }
-    },
-    onError: (e) => {
-      setMessages(prev => {
-          const lastMessage = prev[prev.length-1];
-          if (lastMessage && lastMessage.role === 'model') {
-             return [
-                  ...prev.slice(0, prev.length - 1),
-                  { ...lastMessage, content: `⚠️ An error occurred: ${e.message}`, error: true },
-             ]
-          }
-          return prev;
-      });
-    },
-    stream: true,
-  });
-  
   useEffect(() => {
     // Check for a transcript passed from the transcription page
     const fromTranscript = searchParams.get('from_transcript');
@@ -190,7 +151,7 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     if (scrollAreaRef.current) {
         scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
     }
-  }, [messages, loading]);
+  }, [messages, isLoading]);
 
   const getRole = () => {
     const role = searchParams.get('role');
@@ -233,6 +194,8 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
 
   const handleSendMessage = async (messageContent: string, messageHistory: Message[]) => {
     if (!messageContent.trim()) return;
+    
+    setIsLoading(true);
 
     const newUserMessage: Message = {
         id: `user-${Date.now()}`,
@@ -243,12 +206,22 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     };
     
     const updatedMessages = [...messageHistory, newUserMessage];
-    setMessages(updatedMessages);
+    const modelMessageId = `model-${Date.now()}`;
+    const modelMessage: Message = {
+      id: modelMessageId,
+      role: 'model',
+      content: '',
+      avatar: botAvatar,
+      name: 'Legal AI',
+    };
+
+    setMessages([...updatedMessages, modelMessage]);
     setInput('');
 
     if (messageContent.startsWith('/timeline ')) {
       const commandInput = messageContent.substring('/timeline '.length);
       await handleTimelineCommand(commandInput);
+      setIsLoading(false);
       return;
     }
 
@@ -257,12 +230,44 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
       content: [{ text: m.content }],
     }));
 
-    run({
-      message: messageContent,
-      history: historyForApi,
-      userRole: getRole(),
-    });
+    try {
+        const flowInput: ChatInput = {
+            message: messageContent,
+            history: historyForApi,
+            userRole: getRole(),
+        };
 
+        const stream = streamFlow('chatWithTools', flowInput, {
+            // By default, the adapter is at /api/genkit
+            adapterUrl: '/api/chat',
+        });
+
+        for await (const chunk of stream) {
+            if (chunk.role === 'model' && chunk.content) {
+                setMessages(prev => {
+                  const newMessages = [...prev];
+                  const lastMessage = newMessages[newMessages.length - 1];
+                  if (lastMessage && lastMessage.id === modelMessageId) {
+                      lastMessage.content = chunk.content;
+                  }
+                  return newMessages;
+                });
+            }
+        }
+    } catch (e: any) {
+        setMessages(prev => {
+            const lastMessage = prev[prev.length-1];
+            if (lastMessage && lastMessage.id === modelMessageId) {
+               return [
+                    ...prev.slice(0, prev.length - 1),
+                    { ...lastMessage, content: `⚠️ An error occurred: ${e.message}`, error: true },
+               ]
+            }
+            return prev;
+        });
+    } finally {
+        setIsLoading(false);
+    }
   };
   
   const handleRetry = (messageId: string) => {
@@ -284,8 +289,6 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     e.preventDefault();
     handleSendMessage(input, messages);
   }
-  
-  const isLoading = loading;
 
   return (
     <div className="flex flex-col h-full bg-background">
