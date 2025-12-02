@@ -15,6 +15,7 @@ import { searchCaseLawDatabase } from '@/services/legal-search';
 import { draftLegalDocument } from './draft-legal-document';
 import { explainLegalTerm } from './explain-legal-term';
 import { translateText } from './translate-text';
+import { ModelReference } from 'genkit/model';
 
 const ChatInputSchema = z.object({
   message: z.string().describe('The user message'),
@@ -27,6 +28,7 @@ const ChatInputSchema = z.object({
   userRole: z
     .enum(['Advocate', 'Student', 'Public'])
     .describe('The role of the user.'),
+  model: z.string().optional().describe('The model to use for the response.'),
 });
 export type ChatInput = z.infer<typeof ChatInputSchema>;
 
@@ -146,8 +148,7 @@ export const chatWithTools = ai.defineFlow(
     stream: true,
   },
   async (input, streamingCallback) => {
-
-    const model = ai.getModel(ai.model.name);
+    const model = input.model ? ai.getModel(input.model as ModelReference) : ai.getModel(ai.model.name);
     
     const {stream, response} = ai.generateStream({
         model,

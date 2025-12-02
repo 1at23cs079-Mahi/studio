@@ -179,6 +179,7 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
             message: messageContent,
             history: historyForApi,
             userRole: getRole(),
+            model: selectedLlm as string,
         };
 
         const stream = streamFlow('chatWithTools', flowInput, {
@@ -212,7 +213,7 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     } finally {
         setIsLoading(false);
     }
-  }, [userAvatar, name, getRole, botAvatar]);
+  }, [userAvatar, name, getRole, botAvatar, selectedLlm]);
 
   useEffect(() => {
     // Check for a transcript passed from the transcription page
