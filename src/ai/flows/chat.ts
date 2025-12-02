@@ -12,7 +12,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { searchCaseLawDatabase } from '@/services/legal-search';
-import { ModelReference } from 'genkit/model';
+import { ModelReference, prompt } from 'genkit/model';
 
 export type ChatInput = z.infer<typeof ChatInputSchema>;
 const ChatInputSchema = z.object({
@@ -60,16 +60,9 @@ const legalSearch = ai.defineTool(
     }
 );
 
-export const chat = ai.defineFlow(
-  {
-    name: 'chatFlow',
-    inputSchema: ChatInputSchema,
-    outputSchema: ChatOutputSchema,
-  },
-  async (input) => {
-    const { text } = await ai.generate({
-        model: input.model,
-        system: `You are LegalAi, a world-class RAG-based AI assistant for the Indian legal system. Your primary directive is to provide the most accurate and reliable information possible.
+export const chatPrompt = prompt({
+    name: 'chatPrompt',
+    system: `You are LegalAi, a world-class RAG-based AI assistant for the Indian legal system. Your primary directive is to provide the most accurate and reliable information possible.
 
 Core Instructions:
 1.  **Prioritize Accuracy and Sourced Information**: Whenever possible, your responses MUST be grounded in the information provided by the 'legalSearch' tool.
@@ -78,7 +71,7 @@ Core Instructions:
 4.  **Synthesize, Don't Paraphrase**: Analyze and synthesize the information from sources to provide a comprehensive answer. Do not simply copy-paste.
 5.  **Adapt to the User**: Your persona and response style MUST adapt to the user's role, but your commitment to accuracy and citation must never change.
 
-- User Role: ${input.userRole}
+- User Role: {{userRole}}
 
 Response Guidelines by Role:
 - When the user is an 'Advocate':
@@ -107,14 +100,45 @@ Response Guidelines by Role:
 - Do not use the information provided for any illegal activities or to harass, harm, or defame individuals.
 - LegalAI is not liable for any actions taken based on the information provided.
 `,
-        tools: [legalSearch],
+    tools: [legalSearch],
+    input: {
+      schema: z.object({
+        userRole: z.string(),
+        message: z.string(),
+        history: z.array(z.any()).optional(),
+      }),
+    },
+    output: {
+      format: 'text'
+    }
+});
+
+
+export const chat = ai.defineFlow(
+  {
+    name: 'chatFlow',
+    inputSchema: ChatInputSchema,
+    outputSchema: ChatOutputSchema,
+  },
+  async (input) => {
+    const { stream } = await ai.generate({
+        model: input.model,
+        prompt: {
+          text: input.message,
+          context: { userRole: input.userRole, history: input.history },
+        },
         history: input.history,
-        prompt: input.message,
+        promptName: 'chatPrompt',
     });
 
+    let content = '';
+    for await (const chunk of stream) {
+        content += chunk.text;
+    }
+    
     return {
       role: 'model',
-      content: text,
+      content,
     };
   }
 );

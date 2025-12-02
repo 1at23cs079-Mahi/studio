@@ -15,10 +15,6 @@ import {
   RefreshCcw,
   Bot
 } from 'lucide-react';
-import { 
-  chat, 
-  ChatInput,
-} from '@/ai/flows/chat';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -26,6 +22,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import type { ModelId } from './header';
 import { CommandMenu } from './command-menu';
+import { useActions } from '@genkit-ai/next/use-actions';
 
 
 type Message = {
@@ -120,7 +117,6 @@ const MemoizedMessage = memo(function Message({ message, onRetry }: { message: M
 export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -129,7 +125,9 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
   const email = searchParams.get('email') || '';
   const userAvatar = `https://picsum.photos/seed/${email}/40/40`;
   const botAvatar = `https://picsum.photos/seed/bot/40/40`;
-
+  
+  const [isStreaming, setIsStreaming] = useState(false);
+  
   useEffect(() => {
     // Check for a transcript passed from the transcription page
     const fromTranscript = searchParams.get('from_transcript');
@@ -152,7 +150,7 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     if (scrollAreaRef.current) {
         scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, isStreaming]);
 
   const getRole = () => {
     const role = searchParams.get('role');
@@ -175,7 +173,17 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     const updatedMessages = [...messageHistory, newUserMessage];
     setMessages(updatedMessages);
     setInput('');
-    setIsLoading(true);
+    setIsStreaming(true);
+
+    const modelMessageId = `model-${Date.now()}`;
+    const modelMessage: Message = {
+      id: modelMessageId,
+      role: 'model',
+      content: '',
+      avatar: botAvatar,
+      name: 'Legal AI',
+    };
+    setMessages(prev => [...prev, modelMessage]);
 
     try {
         const historyForApi = messageHistory
@@ -185,37 +193,51 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
               content: [{ text: m.content }],
           }));
         
-        const chatInput: ChatInput = {
-          message: messageContent,
-          history: historyForApi,
-          userRole: getRole(),
-          model: selectedLlm,
-        };
-        const response = await chat(chatInput);
-        const responseContent = response.content;
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: messageContent,
+                history: historyForApi,
+                userRole: getRole(),
+                model: selectedLlm,
+            })
+        });
 
-      const modelMessage: Message = {
-        id: `model-${Date.now()}`,
-        role: 'model',
-        content: responseContent,
-        avatar: botAvatar,
-        name: 'Legal AI',
-      };
-      setMessages(prev => [...prev, modelMessage]);
+        if (!response.body) {
+            throw new Error("No response body");
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            
+            setMessages(prev => prev.map(m => 
+                m.id === modelMessageId 
+                    ? { ...m, content: buffer }
+                    : m
+            ));
+        }
 
     } catch (error: any) {
       console.error('AI task failed:', error);
-      const errorMessage: Message = {
-        id: `error-${Date.now()}`,
-        role: 'model',
-        content: "⚠️ The AI task failed. This could be due to a network issue or an API error. Please try again.",
-        avatar: botAvatar,
-        name: 'Legal AI',
-        error: true,
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => prev.map(m => 
+        m.id === modelMessageId 
+            ? { 
+                ...m, 
+                content: "⚠️ The AI task failed. This could be due to a network issue or an API error. Please try again.",
+                error: true
+              }
+            : m
+      ));
     } finally {
-      setIsLoading(false);
+      setIsStreaming(false);
     }
   };
 
@@ -238,6 +260,8 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     e.preventDefault();
     handleSendMessage(input, messages);
   }
+  
+  const isLoading = isStreaming;
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -253,9 +277,10 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
         ) : (
           <div className="space-y-6">
             {messages.map((message) => (
-              <MemoizedMessage key={message.id} message={message} onRetry={handleRetry} />
+                (message.content || message.id.startsWith('user-')) && // Render user messages immediately, but only model messages with content
+                <MemoizedMessage key={message.id} message={message} onRetry={handleRetry} />
             ))}
-             {isLoading && (
+             {isLoading && messages[messages.length-1]?.content === '' && (
               <div className="flex items-start gap-3">
                 <Avatar className="h-8 w-8">
                     <AvatarImage src={botAvatar} alt="Legal AI" />
