@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
-import { Users, UserPlus, Activity, DollarSign } from 'lucide-react';
+import { Users, UserPlus, Activity, CreditCard } from 'lucide-react';
 import { ChartTooltipContent } from '@/components/ui/chart';
 
 const data = [
@@ -62,10 +62,10 @@ export default function AdminDashboardPage() {
                 <CardTitle className="text-sm font-medium">
                 API Credits Used
                 </CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">$4,231.89</div>
+                <div className="text-2xl font-bold">₹3,50,000</div>
                 <p className="text-xs text-muted-foreground">
                 +19% from last month
                 </p>

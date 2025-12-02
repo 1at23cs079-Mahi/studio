@@ -38,7 +38,7 @@ const prompt = ai.definePrompt({
   name: 'transcribeAudioPrompt',
   input: { schema: TranscribeAudioInputSchema },
   output: { schema: TranscribeAudioOutputSchema },
-  prompt: `You are a highly accurate audio transcription service specializing in Indian legal terminology and accents (including Hindi, Kannada, Telugu, Tamil, Marathi, and English).
+  prompt: `You are a highly accurate audio transcription service specializing in Indian legal terminology and accents (including Hinglish, Kannada, Telugu, Tamil, Marathi, and English).
   Transcribe the following audio file.
 
   Audio: {{media url=audioDataUri}}
