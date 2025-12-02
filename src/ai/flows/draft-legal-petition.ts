@@ -51,8 +51,6 @@ Instructions:
     - For an 'Advocate', the draft should be formal, comprehensive, and ready for court filing, with detailed legal arguments.
     - For a 'Student', the draft should be well-structured with clear sections and annotations explaining the purpose of each clause, serving as a learning tool.
     - For a 'Public' user, the draft should be a simplified version or a pro-forma template, with clear explanations for each section and what information is needed. It should be framed as an informational guide, not a ready-to-file document.
-
-**LegalAi Disclaimer**: The generated draft is for informational and educational purposes only and does not constitute legal advice. It is a template and may not be suitable for your specific circumstances. You MUST consult a licensed advocate to review and finalize any legal document before filing or use. LegalAI is not liable for any direct or indirect consequences arising from the use of this draft.
   `,
 });
 
