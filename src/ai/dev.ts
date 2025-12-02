@@ -11,6 +11,7 @@ import '@/ai/flows/transcribe-audio.ts';
 import '@/ai/flows/translate-text.ts';
 import { chatPrompt } from '@/ai/flows/chat.ts';
 import '@/ai/flows/explain-legal-term.ts';
+import '@/ai/flows/summarize-video.ts';
 
 export const_ = {
     chatPrompt

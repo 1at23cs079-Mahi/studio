@@ -24,6 +24,7 @@ import {
   Mic,
   Languages,
   FileSignature,
+  Video,
 } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import Link from 'next/link';
@@ -166,6 +167,18 @@ export function DashboardSidebar() {
                         <Link href={`/dashboard/translation?${queryString}`}>
                             <Languages />
                             <span>Translation</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === '/dashboard/video-summary'}
+                        tooltip={{ children: 'Video Summary', side: 'right' }}
+                    >
+                        <Link href={`/dashboard/video-summary?${queryString}`}>
+                            <Video />
+                            <span>Video Summary</span>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
