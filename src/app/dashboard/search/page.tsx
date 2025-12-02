@@ -34,12 +34,6 @@ import { searchCaseLaw, CaseLaw, SearchCaseLawInput } from '@/ai/flows/search-ca
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 
-const courtOptions = [
-    'Supreme Court of India',
-    'High Court',
-    'District Court',
-];
-
 const subjectOptions = [
     'Constitutional Law',
     'Criminal Law',
@@ -59,7 +53,7 @@ export default function CaseLawSearchPage() {
     defaultValues: {
         query: '',
         filters: {
-            court: '',
+            court: 'High Court', // Hardcode to High Court
             judge: '',
             year: undefined,
             subject: '',
@@ -79,8 +73,17 @@ export default function CaseLawSearchPage() {
     setIsLoading(true);
     setResults([]);
 
+    // Ensure the court filter is always set to High Court
+    const searchData = {
+        ...data,
+        filters: {
+            ...data.filters,
+            court: 'High Court',
+        }
+    };
+
     try {
-        const response = await searchCaseLaw(data);
+        const response = await searchCaseLaw(searchData);
         setResults(response.results);
         if (response.results.length === 0) {
             toast({
@@ -105,9 +108,9 @@ export default function CaseLawSearchPage() {
       <div className="md:col-span-4 lg:col-span-3 flex flex-col gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>Case Law Search</CardTitle>
+            <CardTitle>Karnataka High Court Case Search</CardTitle>
             <CardDescription>
-              Find relevant case law from our database.
+              Search for cases from the Karnataka High Court database.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -118,7 +121,7 @@ export default function CaseLawSearchPage() {
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="search-query"
-                    placeholder="e.g., 'basic structure doctrine'"
+                    placeholder="e.g., 'writ of mandamus'"
                     {...register('query')}
                     className="pl-9"
                   />
@@ -127,14 +130,12 @@ export default function CaseLawSearchPage() {
 
               <div className="grid gap-2">
                 <Label htmlFor="court-filter">Court</Label>
-                 <Select onValueChange={(value) => setValue('filters.court', value)} >
+                 <Select value="High Court" disabled>
                     <SelectTrigger id="court-filter">
                         <SelectValue placeholder="Filter by court..." />
                     </SelectTrigger>
                     <SelectContent>
-                        {courtOptions.map(court => (
-                            <SelectItem key={court} value={court}>{court}</SelectItem>
-                        ))}
+                        <SelectItem value="High Court">Karnataka High Court</SelectItem>
                     </SelectContent>
                 </Select>
               </div>

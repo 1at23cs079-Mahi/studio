@@ -1,3 +1,4 @@
+
 'use server';
 
 import db from '@/lib/case-law-db.json';
@@ -17,7 +18,15 @@ export async function searchCaseLawDatabase(
 ): Promise<CaseLaw[]> {
   const queryLower = query.toLowerCase();
   
-  let results = db.cases.filter(c => 
+  let results = db.cases;
+
+  // Apply court filter first, as it's the primary refinement
+  if (filters?.court) {
+    results = results.filter(c => c.court.toLowerCase() === filters.court.toLowerCase());
+  }
+
+  // Then, apply the keyword query search on the filtered results
+  results = results.filter(c => 
     query.trim() === '' || // if query is empty, don't filter by it
     c.title.toLowerCase().includes(queryLower) ||
     c.summary.toLowerCase().includes(queryLower) ||
@@ -28,9 +37,6 @@ export async function searchCaseLawDatabase(
 
   // Apply other filters if they exist
   if (filters) {
-    if (filters.court) {
-      results = results.filter(c => c.court.toLowerCase() === filters.court.toLowerCase());
-    }
     if (filters.subject) {
       results = results.filter(c => c.subject.toLowerCase() === filters.subject.toLowerCase());
     }
