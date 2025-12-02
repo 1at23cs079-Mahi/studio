@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Loader2, Copy, Mic, Square, Voicemail } from 'lucide-react';
+import { Loader2, Copy, Mic, Square, Voicemail, Languages } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { transcribeAudio, TranscribeAudioInput } from '@/ai/flows/transcribe-audio';
 import { translateText, TranslateTextInput } from '@/ai/flows/translate-text';
