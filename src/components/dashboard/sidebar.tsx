@@ -147,6 +147,18 @@ export function DashboardSidebar() {
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === '/dashboard/text-translation'}
+                        tooltip={{ children: 'Text Translation', side: 'right' }}
+                    >
+                        <Link href={`/dashboard/translation?${queryString}`}>
+                            <Languages />
+                            <span>Text Translation</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
                  <SidebarMenuItem>
                     <SidebarMenuButton
                         asChild
