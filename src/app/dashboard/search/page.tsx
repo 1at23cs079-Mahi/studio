@@ -40,6 +40,16 @@ const courtOptions = [
     'District Court',
 ];
 
+const subjectOptions = [
+    'Constitutional Law',
+    'Criminal Law',
+    'Civil Law',
+    'Corporate Law',
+    'Intellectual Property',
+    'Cyber Law',
+    "Women's Rights",
+];
+
 export default function CaseLawSearchPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -52,6 +62,7 @@ export default function CaseLawSearchPage() {
             court: '',
             judge: '',
             year: undefined,
+            subject: '',
         }
     }
   });
@@ -123,6 +134,20 @@ export default function CaseLawSearchPage() {
                     <SelectContent>
                         {courtOptions.map(court => (
                             <SelectItem key={court} value={court}>{court}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="subject-filter">Subject Matter</Label>
+                 <Select onValueChange={(value) => setValue('filters.subject', value)} >
+                    <SelectTrigger id="subject-filter">
+                        <SelectValue placeholder="Filter by subject..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {subjectOptions.map(subject => (
+                            <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
