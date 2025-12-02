@@ -22,8 +22,6 @@ const ChatInputSchema = z.object({
     role: z.enum(['user', 'model', 'tool']),
     content: z.array(z.object({
       text: z.string().optional(),
-      toolRequest: z.any().optional(),
-      toolResponse: z.any().optional(),
     }))
   })).optional().describe('The conversation history.'),
   userRole: z
@@ -144,25 +142,30 @@ export const chatWithTools = ai.defineFlow(
   {
     name: 'chatWithToolsFlow',
     inputSchema: ChatInputSchema,
-    outputSchema: ChatOutputSchema,
+    outputSchema: z.any(),
     stream: true,
   },
   async (input, streamingCallback) => {
 
     const model = ai.getModel(ai.model.name);
     
-    const response = await ai.generate({
+    const {stream, response} = ai.generateStream({
         model,
         prompt: input.message,
         history: input.history,
         context: { userRole: input.userRole },
         promptName: 'chatPrompt',
-        stream: streamingCallback
     });
+
+    for await (const chunk of stream) {
+      streamingCallback(chunk);
+    }
+
+    const final = await response;
     
     return {
       role: 'model',
-      content: response.text,
+      content: final.text,
     };
   }
 );

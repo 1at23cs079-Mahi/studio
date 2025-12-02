@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect, memo } from 'react';
@@ -21,9 +22,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import type { ModelId } from './header';
 import { CommandMenu } from './command-menu';
-import { useActions, useStream } from '@genkit-ai/next/use-actions';
+import { useFlow } from '@genkit-ai/next/client';
 import { generateCaseTimeline } from '@/ai/flows/generate-case-timeline';
-import { chatWithTools } from '@/ai/flows/chat';
+import { chatWithTools, type ChatInput, type ChatOutput } from '@/ai/flows/chat';
 
 
 type Message = {
@@ -121,13 +122,51 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const { stream, streaming, stop, error } = useStream(chatWithTools);
-  const [isStreaming, setIsStreaming] = useState(false);
-
+  
   const name = searchParams.get('name') || 'User';
   const email = searchParams.get('email') || '';
   const userAvatar = `https://picsum.photos/seed/${email}/40/40`;
   const botAvatar = `https://picsum.photos/seed/bot/40/40`;
+
+  const { run, loading, output, error } = useFlow<ChatInput, ChatOutput>('/api/chat', {
+    onStart: (input) => {
+      const modelMessageId = `model-${Date.now()}`;
+      setMessages(prev => [...prev, {
+        id: modelMessageId,
+        role: 'model',
+        content: '',
+        avatar: botAvatar,
+        name: 'Legal AI',
+      }]);
+    },
+    onUpdate: (chunk) => {
+       if (chunk.role === 'model' && chunk.content) {
+        setMessages(prev => {
+          const lastMessage = prev[prev.length - 1];
+          if (lastMessage && lastMessage.role === 'model') {
+            return [
+              ...prev.slice(0, prev.length - 1),
+              { ...lastMessage, content: chunk.content },
+            ];
+          }
+          return prev;
+        });
+      }
+    },
+    onError: (e) => {
+      setMessages(prev => {
+          const lastMessage = prev[prev.length-1];
+          if (lastMessage && lastMessage.role === 'model') {
+             return [
+                  ...prev.slice(0, prev.length - 1),
+                  { ...lastMessage, content: `⚠️ An error occurred: ${e.message}`, error: true },
+             ]
+          }
+          return prev;
+      });
+    },
+    stream: true,
+  });
   
   useEffect(() => {
     // Check for a transcript passed from the transcription page
@@ -151,7 +190,7 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     if (scrollAreaRef.current) {
         scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
     }
-  }, [messages, isStreaming]);
+  }, [messages, loading]);
 
   const getRole = () => {
     const role = searchParams.get('role');
@@ -189,8 +228,6 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
                   }
                 : m
         ));
-      } finally {
-        setIsStreaming(false);
       }
   };
 
@@ -208,7 +245,6 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     const updatedMessages = [...messageHistory, newUserMessage];
     setMessages(updatedMessages);
     setInput('');
-    setIsStreaming(true);
 
     if (messageContent.startsWith('/timeline ')) {
       const commandInput = messageContent.substring('/timeline '.length);
@@ -217,33 +253,16 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     }
 
     const historyForApi = messageHistory.map(m => ({
-      role: m.role as 'user' | 'model',
+      role: m.role as 'user' | 'model' | 'tool',
       content: [{ text: m.content }],
     }));
 
-    const responseStream = stream({
+    run({
       message: messageContent,
       history: historyForApi,
       userRole: getRole(),
     });
 
-    const modelMessageId = `model-${Date.now()}`;
-    setMessages(prev => [...prev, {
-      id: modelMessageId,
-      role: 'model',
-      content: '',
-      avatar: botAvatar,
-      name: 'Legal AI',
-    }]);
-
-    let currentContent = '';
-    for await (const chunk of responseStream) {
-        currentContent += chunk.text;
-        setMessages(prev => prev.map(m => 
-            m.id === modelMessageId ? { ...m, content: currentContent } : m
-        ));
-    }
-    setIsStreaming(false);
   };
   
   const handleRetry = (messageId: string) => {
@@ -266,7 +285,7 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     handleSendMessage(input, messages);
   }
   
-  const isLoading = isStreaming;
+  const isLoading = loading;
 
   return (
     <div className="flex flex-col h-full bg-background">
