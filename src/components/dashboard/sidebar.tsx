@@ -25,6 +25,7 @@ import {
   Languages,
   FileSignature,
   Video,
+  Voicemail,
 } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import Link from 'next/link';
@@ -166,7 +167,19 @@ export function DashboardSidebar() {
                     >
                         <Link href={`/dashboard/translation?${queryString}`}>
                             <Languages />
-                            <span>Translation</span>
+                            <span>Text Translation</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === '/dashboard/voice-translation'}
+                        tooltip={{ children: 'Voice Translation', side: 'right' }}
+                    >
+                        <Link href={`/dashboard/voice-translation?${queryString}`}>
+                            <Voicemail />
+                            <span>Voice Translation</span>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
