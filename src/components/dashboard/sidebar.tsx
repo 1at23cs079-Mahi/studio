@@ -26,6 +26,7 @@ import {
   FileSignature,
   Video,
   Voicemail,
+  Briefcase,
 } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import Link from 'next/link';
@@ -99,6 +100,18 @@ export function DashboardSidebar() {
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === '/dashboard/case-management'}
+                        tooltip={{ children: 'LegalAI Chat', side: 'right' }}
+                    >
+                        <Link href={`/dashboard/case-management?${queryString}`}>
+                            <Briefcase />
+                            <span>LegalAI Chat</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
                 <SidebarMenuItem>
                     <SidebarMenuButton
                         asChild
@@ -150,7 +163,7 @@ export function DashboardSidebar() {
                 <SidebarMenuItem>
                     <SidebarMenuButton
                         asChild
-                        isActive={pathname === '/dashboard/text-translation'}
+                        isActive={pathname === '/dashboard/translation'}
                         tooltip={{ children: 'Text Translation', side: 'right' }}
                     >
                         <Link href={`/dashboard/translation?${queryString}`}>
