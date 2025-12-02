@@ -19,6 +19,10 @@ import {
   chat, 
   ChatInput,
 } from '@/ai/flows/chat';
+import {
+  draftLegalPetition,
+  DraftLegalPetitionInput,
+} from '@/ai/flows/draft-legal-petition';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -79,7 +83,9 @@ const MemoizedMessage = memo(function Message({ message, onRetry }: { message: M
           : 'bg-[hsl(var(--bot-bubble-bg))] text-[hsl(var(--bot-bubble-foreground))]',
         { 'bg-destructive/20 border border-destructive/50': message.error }
       )}>
-        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+        <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap text-sm" style={{color: 'inherit'}}>
+          {message.content}
+        </div>
         <div className="mt-2 flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             {message.error ? (
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onRetry(message.id)}>
@@ -135,7 +141,7 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
       const transcript = sessionStorage.getItem('transcriptToChat');
       if (transcript) {
         const initialUserMessage = `Please analyze the following transcript:\n\n---\n\n${transcript}`;
-        sendMessage(initialUserMessage, []);
+        handleSendMessage(initialUserMessage, []);
         sessionStorage.removeItem('transcriptToChat');
 
         // Clean up the URL
@@ -159,7 +165,7 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     return 'Public';
   };
   
-  const sendMessage = async (messageContent: string, messageHistory: Message[]) => {
+  const handleSendMessage = async (messageContent: string, messageHistory: Message[]) => {
     if (!messageContent.trim()) return;
 
     const newUserMessage: Message = {
@@ -176,26 +182,39 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     setIsLoading(true);
 
     try {
-      const historyForApi = messageHistory
-        .filter(m => !m.error) // Exclude previous errors from history
-        .map(m => ({
-            role: m.role,
-            content: [{ text: m.content }],
-        }));
-      
-      const inputPayload: ChatInput = {
-        message: messageContent,
-        history: historyForApi, // Pass the clean history
-        userRole: getRole(),
-        model: selectedLlm,
-      };
+      let responseContent: string;
 
-      const response = await chat(inputPayload);
+      // Check if the user is using a command
+      if (messageContent.startsWith('/draft')) {
+        const query = messageContent.replace('/draft', '').trim();
+        const draftInput: DraftLegalPetitionInput = {
+          query,
+          userRole: getRole(),
+        };
+        const response = await draftLegalPetition(draftInput);
+        responseContent = response.draft;
+      } else {
+        const historyForApi = messageHistory
+          .filter(m => !m.error)
+          .map(m => ({
+              role: m.role,
+              content: [{ text: m.content }],
+          }));
+        
+        const chatInput: ChatInput = {
+          message: messageContent,
+          history: historyForApi,
+          userRole: getRole(),
+          model: selectedLlm,
+        };
+        const response = await chat(chatInput);
+        responseContent = response.content;
+      }
 
       const modelMessage: Message = {
         id: `model-${Date.now()}`,
         role: 'model',
-        content: response.content,
+        content: responseContent,
         avatar: botAvatar,
         name: 'Legal AI',
       };
@@ -206,7 +225,7 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         role: 'model',
-        content: "⚠️ API failed. Please try again.",
+        content: "⚠️ The AI task failed. This could be due to a network issue or an API error. Please try again.",
         avatar: botAvatar,
         name: 'Legal AI',
         error: true,
@@ -227,15 +246,14 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
 
     // Remove the error message and the user message that caused it
     const messagesBeforeFailure = messages.slice(0, failedMessageIndex - 1);
-    setMessages(messagesBeforeFailure);
     
     // Resend the user's message
-    sendMessage(userMessageToRetry.content, messagesBeforeFailure);
+    handleSendMessage(userMessageToRetry.content, messagesBeforeFailure);
   };
   
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    sendMessage(input, messages);
+    handleSendMessage(input, messages);
   }
 
   return (
@@ -305,3 +323,5 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     </div>
   );
 }
+
+    
