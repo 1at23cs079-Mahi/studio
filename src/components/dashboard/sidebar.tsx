@@ -20,7 +20,8 @@ import {
   FileText,
   Home,
   BookOpen,
-  Gavel
+  Gavel,
+  Mic,
 } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import Link from 'next/link';
@@ -115,6 +116,18 @@ export function DashboardSidebar() {
                         <Link href={`/dashboard/document-review?${queryString}`}>
                             <FileText />
                             <span>Document Review</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === '/dashboard/transcription'}
+                        tooltip={{ children: 'Audio Transcription', side: 'right' }}
+                    >
+                        <Link href={`/dashboard/transcription?${queryString}`}>
+                            <Mic />
+                            <span>Audio Transcription</span>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>

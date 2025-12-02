@@ -20,7 +20,7 @@ import {
   ChatInput,
 } from '@/ai/flows/chat';
 import { useToast } from '@/hooks/use-toast';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -117,6 +117,7 @@ const MemoizedMessage = memo(function Message({ message, onRetry }: { message: M
 
 export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -126,6 +127,24 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
   const email = searchParams.get('email') || '';
   const userAvatar = `https://picsum.photos/seed/${email}/40/40`;
   const botAvatar = `https://picsum.photos/seed/bot/40/40`;
+
+  useEffect(() => {
+    // Check for a transcript passed from the transcription page
+    const fromTranscript = searchParams.get('from_transcript');
+    if (fromTranscript === 'true') {
+      const transcript = sessionStorage.getItem('transcriptToChat');
+      if (transcript) {
+        const initialUserMessage = `Please analyze the following transcript:\n\n---\n\n${transcript}`;
+        sendMessage(initialUserMessage, []);
+        sessionStorage.removeItem('transcriptToChat');
+
+        // Clean up the URL
+        const newParams = new URLSearchParams(searchParams.toString());
+        newParams.delete('from_transcript');
+        router.replace(`/dashboard/case-management?${newParams.toString()}`);
+      }
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
