@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect, memo } from 'react';
@@ -23,6 +22,7 @@ import { cn } from '@/lib/utils';
 import type { ModelId } from './header';
 import { CommandMenu } from './command-menu';
 import { useActions } from '@genkit-ai/next/use-actions';
+import { generateCaseTimeline } from '@/ai/flows/generate-case-timeline';
 
 
 type Message = {
@@ -158,23 +158,42 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     if (role === 'student') return 'Student';
     return 'Public';
   };
+
+  const handleTimelineCommand = async (commandInput: string, userMessage: Message, messageHistory: Message[]) => {
+      const modelMessageId = `model-${Date.now()}`;
+      const modelMessage: Message = {
+        id: modelMessageId,
+        role: 'model',
+        content: '',
+        avatar: botAvatar,
+        name: 'Legal AI',
+      };
+      setMessages(prev => [...prev, modelMessage]);
+
+      try {
+        const response = await generateCaseTimeline({ caseDetails: commandInput });
+        setMessages(prev => prev.map(m => 
+            m.id === modelMessageId 
+                ? { ...m, content: response.timeline }
+                : m
+        ));
+      } catch (error: any) {
+        console.error('Timeline generation failed:', error);
+        setMessages(prev => prev.map(m => 
+            m.id === modelMessageId 
+                ? { 
+                    ...m, 
+                    content: "⚠️ The AI task to generate a timeline failed. Please try again.",
+                    error: true
+                  }
+                : m
+        ));
+      } finally {
+        setIsStreaming(false);
+      }
+  };
   
-  const handleSendMessage = async (messageContent: string, messageHistory: Message[]) => {
-    if (!messageContent.trim()) return;
-
-    const newUserMessage: Message = {
-        id: `user-${Date.now()}`,
-        role: 'user',
-        content: messageContent,
-        avatar: userAvatar,
-        name: name,
-    };
-    
-    const updatedMessages = [...messageHistory, newUserMessage];
-    setMessages(updatedMessages);
-    setInput('');
-    setIsStreaming(true);
-
+  const handleStreamedChat = async (messageContent: string, messageHistory: Message[]) => {
     const modelMessageId = `model-${Date.now()}`;
     const modelMessage: Message = {
       id: modelMessageId,
@@ -187,7 +206,7 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
 
     try {
         const historyForApi = messageHistory
-          .filter(m => !m.error)
+          .filter(m => !m.error && m.role !== 'user') // Exclude user message that is part of the current prompt
           .map(m => ({
               role: m.role,
               content: [{ text: m.content }],
@@ -226,18 +245,44 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
         }
 
     } catch (error: any) {
-      console.error('AI task failed:', error);
+      console.error('AI chat failed:', error);
       setMessages(prev => prev.map(m => 
         m.id === modelMessageId 
             ? { 
                 ...m, 
-                content: "⚠️ The AI task failed. This could be due to a network issue or an API error. Please try again.",
+                content: "⚠️ The AI chat failed. This could be due to a network issue or an API error. Please try again.",
                 error: true
               }
             : m
       ));
     } finally {
       setIsStreaming(false);
+    }
+  };
+
+  const handleSendMessage = async (messageContent: string, messageHistory: Message[]) => {
+    if (!messageContent.trim()) return;
+
+    const newUserMessage: Message = {
+        id: `user-${Date.now()}`,
+        role: 'user',
+        content: messageContent,
+        avatar: userAvatar,
+        name: name,
+    };
+    
+    const updatedMessages = [...messageHistory, newUserMessage];
+    setMessages(updatedMessages);
+    setInput('');
+    setIsStreaming(true);
+
+    // Command handling
+    if (messageContent.startsWith('/timeline ')) {
+      const commandInput = messageContent.substring('/timeline '.length);
+      await handleTimelineCommand(commandInput, newUserMessage, updatedMessages);
+    } else {
+      // Default chat behavior
+      await handleStreamedChat(messageContent, updatedMessages);
     }
   };
 
@@ -249,7 +294,7 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     const userMessageToRetry = messages[failedMessageIndex - 1];
     if (userMessageToRetry.role !== 'user') return;
 
-    // Remove the error message and the user message that caused it
+    // Remove the error message
     const messagesBeforeFailure = messages.slice(0, failedMessageIndex - 1);
     
     // Resend the user's message
