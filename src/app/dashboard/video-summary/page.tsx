@@ -20,8 +20,9 @@ import {
   Video,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { summarizeVideo, SummarizeVideoInput } from '@/ai/flows/summarize-video';
+import { SummarizeVideoInput } from '@/ai/flows/summarize-video';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { streamFlow } from '@genkit-ai/next/client';
 
 export default function VideoSummaryPage() {
   const { toast } = useToast();
@@ -69,13 +70,20 @@ export default function VideoSummaryPage() {
     }
 
     setIsLoading(true);
-    setSummary(null);
+    setSummary('');
 
     try {
       const videoDataUri = await fileToDataUri(file);
       const input: SummarizeVideoInput = { videoDataUri };
-      const response = await summarizeVideo(input);
-      setSummary(response.summary);
+      
+      const stream = streamFlow('summarizeVideoFlow', input, {
+        adapterUrl: '/api/chat', // All flows are on this endpoint
+      });
+
+      for await (const chunk of stream) {
+        setSummary(chunk);
+      }
+
     } catch (error: any) {
       console.error('Video summarization failed:', error);
       toast({
@@ -84,6 +92,7 @@ export default function VideoSummaryPage() {
         description:
           error.message || 'Failed to summarize the video. Please try again.',
       });
+      setSummary("An error occurred while summarizing the video.");
     } finally {
       setIsLoading(false);
     }
@@ -178,16 +187,16 @@ export default function VideoSummaryPage() {
           </CardHeader>
           <CardContent className="flex-1 overflow-hidden">
             <ScrollArea className="h-full w-full">
-              {isLoading ? (
+              {isLoading && !summary ? (
                 <div className="flex h-full items-center justify-center">
                   <div className="flex flex-col items-center gap-4">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     <p className="text-muted-foreground">AI is summarizing your video...</p>
                   </div>
                 </div>
-              ) : summary ? (
+              ) : summary || isLoading ? (
                  <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap relative">
-                    {summary}
+                    {summary}{isLoading && <span className="inline-block w-2 h-4 bg-foreground animate-pulse ml-1" />}
                   </div>
               ) : (
                 <div className="flex h-full items-center justify-center">

@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -20,61 +21,49 @@ const SummarizeVideoInputSchema = z.object({
 });
 export type SummarizeVideoInput = z.infer<typeof SummarizeVideoInputSchema>;
 
-const SummarizeVideoOutputSchema = z.object({
-  summary: z.string().describe('A concise summary of the video content.'),
-});
+const SummarizeVideoOutputSchema = z.string().describe('A concise summary of the video content.');
+
 export type SummarizeVideoOutput = z.infer<typeof SummarizeVideoOutputSchema>;
 
 export async function summarizeVideo(
   input: SummarizeVideoInput
 ): Promise<SummarizeVideoOutput> {
-  return summarizeVideoFlow(input);
+    const stream = summarizeVideoFlow(input);
+    let finalResponse = '';
+    for await (const chunk of stream) {
+        finalResponse = chunk;
+    }
+    return finalResponse;
 }
-
-const prompt = ai.definePrompt({
-  name: 'summarizeVideoPrompt',
-  input: { schema: SummarizeVideoInputSchema },
-  output: { schema: SummarizeVideoOutputSchema },
-  prompt: `You are a legal expert specializing in summarizing video content.
-  The user has provided a video file of a legal proceeding, deposition, or lecture.
-  Your task is to analyze the video and provide a concise, accurate summary of its key points, arguments, and conclusions.
-
-  Video to analyze: {{media url=videoDataUri}}
-
-  Focus on identifying the main speakers, the core legal arguments presented, any evidence discussed, and the final outcome or key takeaways.
-  Return only the summary text.
-  `,
-});
 
 const summarizeVideoFlow = ai.defineFlow(
   {
     name: 'summarizeVideoFlow',
     inputSchema: SummarizeVideoInputSchema,
     outputSchema: SummarizeVideoOutputSchema,
+    stream: true,
   },
-  async (input) => {
-    let { operation } = await ai.generate({
-      model: 'googleai/veo-2.0-generate-001',
-      prompt: `A video of a legal proceeding is provided. Summarize its content.`,
-      config: {
-        durationSeconds: 8,
-      },
+  async (input, streamingCallback) => {
+    const { stream, response } = await ai.generateStream({
+        model: 'googleai/gemini-2.5-pro-vision',
+        prompt: `You are a legal expert specializing in summarizing video content.
+        The user has provided a video file of a legal proceeding, deposition, or lecture.
+        Your task is to analyze the video and provide a concise, accurate summary of its key points, arguments, and conclusions.
+
+        Video to analyze: {{media url=videoDataUri}}
+
+        Focus on identifying the main speakers, the core legal arguments presented, any evidence discussed, and the final outcome or key takeaways.
+        Return only the summary text.
+        `,
+        input: { videoDataUri: input.videoDataUri }
     });
 
-    if (!operation) {
-      throw new Error('Expected the model to return an operation');
+    for await (const chunk of stream) {
+        if (chunk.text) {
+            streamingCallback(chunk.text);
+        }
     }
-
-    while (!operation.done) {
-      operation = await ai.checkOperation(operation);
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
-
-    if (operation.error) {
-      throw new Error('failed to generate video summary: ' + operation.error.message);
-    }
-    
-    const { output } = await prompt(input);
-    return output!;
+    const result = await response;
+    return result.text;
   }
 );
