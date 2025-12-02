@@ -19,10 +19,6 @@ import {
   chat, 
   ChatInput,
 } from '@/ai/flows/chat';
-import {
-  draftLegalPetition,
-  DraftLegalPetitionInput,
-} from '@/ai/flows/draft-legal-petition';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -182,18 +178,6 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     setIsLoading(true);
 
     try {
-      let responseContent: string;
-
-      // Check if the user is using a command
-      if (messageContent.startsWith('/draft')) {
-        const query = messageContent.replace('/draft', '').trim();
-        const draftInput: DraftLegalPetitionInput = {
-          query,
-          userRole: getRole(),
-        };
-        const response = await draftLegalPetition(draftInput);
-        responseContent = response.draft;
-      } else {
         const historyForApi = messageHistory
           .filter(m => !m.error)
           .map(m => ({
@@ -208,8 +192,7 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
           model: selectedLlm,
         };
         const response = await chat(chatInput);
-        responseContent = response.content;
-      }
+        const responseContent = response.content;
 
       const modelMessage: Message = {
         id: `model-${Date.now()}`,
@@ -323,5 +306,3 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
     </div>
   );
 }
-
-    

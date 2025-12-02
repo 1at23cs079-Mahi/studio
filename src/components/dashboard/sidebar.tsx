@@ -23,6 +23,7 @@ import {
   Gavel,
   Mic,
   Languages,
+  FileSignature,
 } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import Link from 'next/link';
@@ -117,6 +118,18 @@ export function DashboardSidebar() {
                         <Link href={`/dashboard/document-review?${queryString}`}>
                             <FileText />
                             <span>Document Review</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === '/dashboard/draft-petition'}
+                        tooltip={{ children: 'Draft Petition', side: 'right' }}
+                    >
+                        <Link href={`/dashboard/draft-petition?${queryString}`}>
+                            <FileSignature />
+                            <span>Draft Petition</span>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>

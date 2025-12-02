@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { FileText, History, Scale, Search, Languages, Mic } from 'lucide-react';
+import { History, Scale, Search, Languages, Mic } from 'lucide-react';
 
 interface CommandMenuProps {
     input: string;
@@ -10,7 +10,6 @@ interface CommandMenuProps {
 }
 
 const commands = [
-    { name: 'draft', description: 'Draft a legal petition...', icon: <FileText className="h-4 w-4"/>, example: '/draft a petition for...' },
     { name: 'timeline', description: 'Generate a case timeline for...', icon: <History className="h-4 w-4"/>, example: '/timeline about...' },
     { name: 'search', description: 'Search for case law about...', icon: <Search className="h-4 w-4"/>, example: '/search for cases on...' },
     { name: 'translate', description: 'Translate text to another language', icon: <Languages className="h-4 w-4"/>, example: '/translate to Hindi Hello World' },

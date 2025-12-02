@@ -16,7 +16,8 @@ import {
   BookOpen,
   Gavel,
   Languages,
-  AlertTriangle
+  AlertTriangle,
+  FileSignature
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -58,28 +59,28 @@ const roleConfig = {
         description: "Your AI-powered legal assistant is ready to help you win your next case.",
         quickAccess: [
             {
-                title: "LegalAI",
-                description: "Draft petitions, summarize documents, and manage your cases with AI.",
+                title: "LegalAI Chat",
+                description: "Engage in conversational AI for case management and legal queries.",
                 icon: Briefcase,
-                command: ''
+                href: "/dashboard/case-management"
+            },
+            {
+                title: "Draft Petition",
+                description: "Generate initial drafts of legal petitions with AI assistance.",
+                icon: FileSignature,
+                href: "/dashboard/draft-petition"
             },
             {
                 title: "Document Review",
                 description: "Upload a document for AI-powered analysis and review.",
                 icon: FileText,
-                command: 'review'
-            },
-            {
-                title: "Legal Terminology",
-                description: "Get simple explanations for complex legal terms.",
-                icon: BookOpen,
-                command: 'explain'
+                href: "/dashboard/document-review"
             },
             {
                 title: "Case Law Search",
                 description: "Find relevant case law from our extensive legal database.",
                 icon: Gavel,
-                command: 'search'
+                href: "/dashboard/search"
             }
         ]
     },
@@ -88,28 +89,28 @@ const roleConfig = {
         description: "Your AI study partner for acing your exams and moot courts.",
          quickAccess: [
             {
-                title: "LegalAI",
-                description: "Understand complex legal concepts, summarize cases, and draft assignments.",
+                title: "LegalAI Chat",
+                description: "Understand complex legal concepts and summarize cases.",
                 icon: BookOpen,
-                command: ''
+                href: "/dashboard/case-management"
             },
             {
                 title: "Legal Research",
                 description: "Search for case law, statutes, and legal articles for your research.",
                 icon: SearchIcon,
-                command: 'search'
+                href: "/dashboard/search"
             },
              {
                 title: "Document Review",
                 description: "Upload a document for AI-powered analysis and review.",
                 icon: FileText,
-                command: 'review'
+                href: "/dashboard/document-review"
             },
             {
                 title: "Translate Legal Text",
                 description: "Translate complex legal text into simpler terms or other languages.",
                 icon: Languages,
-                command: 'translate'
+                href: "/dashboard/translation"
             },
         ]
     },
@@ -118,22 +119,22 @@ const roleConfig = {
         description: "Your guide to an introduction to the Indian legal system.",
          quickAccess: [
             {
-                title: "LegalAI",
-                description: "Ask legal questions, understand your rights, and get information on legal procedures.",
+                title: "LegalAI Chat",
+                description: "Ask legal questions, understand your rights, and get information.",
                 icon: Briefcase,
-                command: ''
+                href: "/dashboard/case-management"
             },
             {
                 title: "Legal Terminology",
                 description: "Get simple explanations for complex legal terms.",
                 icon: BookOpen,
-                command: 'explain'
+                href: "/dashboard/legal-terminology"
             },
             {
                 title: "Public Interest Litigation",
                 description: "Learn how to file a PIL and its procedures.",
                 icon: Gavel,
-                command: 'pil'
+                href: "/dashboard/case-management?command=pil"
             },
         ]
     }
@@ -197,22 +198,21 @@ export default function DashboardPage() {
         </h3>
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {quickAccess.map(item => {
-            const search = new URLSearchParams(searchParams.toString());
-            let href = '';
-
-            if (item.title === 'Legal Terminology') {
-                search.delete('command');
-                href = `/dashboard/legal-terminology?${search.toString()}`;
-            } else if (item.title === 'Document Review') {
-                search.delete('command');
-                href = `/dashboard/document-review?${search.toString()}`;
+            const preservedSearchParams = new URLSearchParams(searchParams.toString());
+            let finalHref = item.href;
+            
+            // For links that might carry commands, ensure they are constructed correctly
+            if (finalHref.includes('?')) {
+                const [path, existingQuery] = finalHref.split('?');
+                const newQuery = new URLSearchParams(existingQuery);
+                preservedSearchParams.forEach((value, key) => {
+                    if (!newQuery.has(key)) {
+                        newQuery.set(key, value);
+                    }
+                });
+                finalHref = `${path}?${newQuery.toString()}`;
             } else {
-                if (item.command) {
-                    search.set('command', item.command);
-                } else {
-                    search.delete('command');
-                }
-                href = `/dashboard/case-management?${search.toString()}`;
+                finalHref = `${item.href}?${preservedSearchParams.toString()}`;
             }
 
             return (
@@ -221,7 +221,7 @@ export default function DashboardPage() {
                     title={item.title}
                     description={item.description}
                     icon={item.icon}
-                    href={href}
+                    href={finalHref}
                 />
             )
           })}
