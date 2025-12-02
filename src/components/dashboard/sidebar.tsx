@@ -22,6 +22,7 @@ import {
   BookOpen,
   Gavel,
   Mic,
+  Languages,
 } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import Link from 'next/link';
@@ -140,6 +141,18 @@ export function DashboardSidebar() {
                         <Link href={`/dashboard/search?${queryString}`}>
                             <Gavel />
                             <span>Case Law Search</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === '/dashboard/translation'}
+                        tooltip={{ children: 'Translate Text', side: 'right' }}
+                    >
+                        <Link href={`/dashboard/translation?${queryString}`}>
+                            <Languages />
+                            <span>Translate</span>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
