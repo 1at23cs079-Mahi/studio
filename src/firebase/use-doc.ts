@@ -1,31 +1,25 @@
 
 'use client';
 
-import {
-  DocumentData,
-  DocumentReference,
-  FirestoreError,
-  onSnapshot,
-} from 'firebase/firestore';
-import { useEffect, useState, useMemo } from 'react';
-import { useAuth, useFirestore } from './provider';
-import { useUser } from './use-user';
-import { errorEmitter } from './error-emitter';
-import { FirestorePermissionError } from './errors';
-
+import { useEffect, useState } from 'react';
 
 export type UseDocOptions = {
   disabled?: boolean;
 };
 
+export type DocRef = {
+  collection: string;
+  id: string;
+};
+
 export function useDoc<T>(
-  ref: DocumentReference<DocumentData> | null,
+  ref: DocRef | null,
   options: UseDocOptions = {}
 ) {
   const { disabled = false } = options;
   const [data, setData] = useState<T>();
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<FirestoreError>();
+  const [error, setError] = useState<Error>();
 
   useEffect(() => {
     if (!ref || disabled) {
@@ -36,30 +30,22 @@ export function useDoc<T>(
 
     setIsLoading(true);
 
-    const unsubscribe = onSnapshot(
-      ref,
-      (doc) => {
-        if (doc.exists()) {
-          setData({ ...doc.data(), id: doc.id } as T);
-        } else {
-          setData(undefined);
-        }
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`/api/collections/${ref.collection}/${ref.id}`);
+        if (!response.ok) throw new Error('Failed to fetch document');
+        
+        const result = await response.json();
+        setData(result.data as T);
         setIsLoading(false);
-      },
-      (err) => {
-        const permissionError = new FirestorePermissionError({
-            path: ref.path,
-            operation: 'get',
-        });
-        errorEmitter.emit('permission-error', permissionError);
-
-        setError(err);
+      } catch (err) {
+        setError(err as Error);
         setIsLoading(false);
       }
-    );
+    };
 
-    return () => unsubscribe();
-  }, [ref, disabled]);
+    fetchData();
+  }, [JSON.stringify(ref), disabled]);
 
   return { data, isLoading, error };
 }

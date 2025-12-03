@@ -1,44 +1,30 @@
 
 'use client';
 
-import {
-  onSnapshot,
-  query,
-  where,
-  limit,
-  orderBy,
-  startAfter,
-  endBefore,
-  limitToLast,
-  startAt,
-  Query,
-  DocumentData,
-  FirestoreError,
-  QuerySnapshot,
-} from 'firebase/firestore';
-import { useEffect, useState, useRef, useMemo } from 'react';
-import { useAuth, useFirestore } from './provider';
-import { useUser } from './use-user';
-import { errorEmitter } from './error-emitter';
-import { FirestorePermissionError } from './errors';
+import { useEffect, useState } from 'react';
 
 export type UseCollectionOptions = {
   disabled?: boolean;
 };
 
+export type CollectionQuery = {
+  collection: string;
+  filter?: Record<string, any>;
+  sort?: Record<string, 1 | -1>;
+  limit?: number;
+};
+
 export function useCollection<T>(
-  query: Query<DocumentData> | null,
+  query: CollectionQuery | null,
   options: UseCollectionOptions = {}
 ) {
   const { disabled } = options;
   const [data, setData] = useState<T[]>();
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<FirestoreError>();
-
-  const memoizedQuery = useMemo(() => query, [JSON.stringify(query)]);
+  const [error, setError] = useState<Error>();
 
   useEffect(() => {
-    if (!memoizedQuery || disabled) {
+    if (!query || disabled) {
       setData(undefined);
       setIsLoading(false);
       return;
@@ -46,30 +32,27 @@ export function useCollection<T>(
 
     setIsLoading(true);
 
-    const unsubscribe = onSnapshot(
-      memoizedQuery,
-      (snapshot: QuerySnapshot) => {
-        const data: any[] = [];
-        snapshot.forEach((doc) => {
-          data.push({ ...doc.data(), id: doc.id });
-        });
-        setData(data as T[]);
-        setIsLoading(false);
-      },
-      (err: FirestoreError) => {
-        const permissionError = new FirestorePermissionError({
-            path: memoizedQuery.path,
-            operation: 'list',
-        });
-        errorEmitter.emit('permission-error', permissionError);
+    const fetchData = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (query.filter) params.append('filter', JSON.stringify(query.filter));
+        if (query.sort) params.append('sort', JSON.stringify(query.sort));
+        if (query.limit) params.append('limit', query.limit.toString());
 
-        setError(err);
+        const response = await fetch(`/api/collections/${query.collection}?${params}`);
+        if (!response.ok) throw new Error('Failed to fetch data');
+        
+        const result = await response.json();
+        setData(result.data as T[]);
+        setIsLoading(false);
+      } catch (err) {
+        setError(err as Error);
         setIsLoading(false);
       }
-    );
+    };
 
-    return () => unsubscribe();
-  }, [memoizedQuery, disabled]);
+    fetchData();
+  }, [JSON.stringify(query), disabled]);
 
   return { data, isLoading, error };
 }
