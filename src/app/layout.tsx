@@ -3,22 +3,23 @@
 
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import { PT_Sans, Space_Grotesk } from 'next/font/google';
+// import { PT_Sans, Space_Grotesk } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, createContext, useContext } from 'react';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
-const fontSans = PT_Sans({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--font-sans',
-  display: 'swap',
-});
-const fontHeadline = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-headline',
-  display: 'swap',
-});
+// Using system fonts as fallback when Google Fonts are not accessible
+// const fontSans = PT_Sans({
+//   subsets: ['latin'],
+//   weight: ['400', '700'],
+//   variable: '--font-sans',
+//   display: 'swap',
+// });
+// const fontHeadline = Space_Grotesk({
+//   subsets: ['latin'],
+//   variable: '--font-headline',
+//   display: 'swap',
+// });
 
 type Theme = 'dark' | 'light';
 
@@ -66,7 +67,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn('font-sans antialiased', fontSans.variable, fontHeadline.variable)}>
+      <body className={cn('font-sans antialiased')}>
         <FirebaseClientProvider>
           <ThemeProvider>
               {children}

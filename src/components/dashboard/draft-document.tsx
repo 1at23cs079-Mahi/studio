@@ -53,8 +53,9 @@ export function DraftDocument() {
         userRole: getRole(),
       };
       
-      const stream = streamFlow('draftLegalDocumentFlow', input, {
-        adapterUrl: '/api/chat',
+      const { output, stream } = streamFlow({
+        url: '/api/draft-document',
+        input,
       });
 
       for await (const chunk of stream) {
