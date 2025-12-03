@@ -99,6 +99,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - [MongoDB Setup Guide](./MIGRATION_GUIDE.md)
 - [Vercel Deployment Guide](./VERCEL_DEPLOYMENT.md)
 - [Quick Deploy Guide](./DEPLOY.md)
+- [Legal AI Features Guide](./LEGAL_AI_GUIDE.md)
 
 ## 🌐 Deploy to Vercel
 
