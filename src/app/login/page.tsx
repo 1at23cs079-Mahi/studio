@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -19,65 +18,33 @@ import { Github, Chrome, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { signInWithEmailAndPassword, sendPasswordResetEmail, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, setPersistence, browserLocalPersistence, browserSessionPersistence, type User } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { useFirebase } from '@/firebase';
 
 export const dynamic = 'force-dynamic';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { auth, db } = useFirebase();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<'google' | 'github' | null>(null);
 
-  const handleSuccessfulLogin = async (user: User) => {
-    if (!db) {
-        toast({
-            variant: 'destructive',
-            title: 'Database Error',
-            description: 'Could not connect to the database.',
-        });
-        return;
-    }
-    let name = user.displayName || 'User';
-    let role = 'public'; // default
-
-    try {
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          name = userData.name;
-          role = userData.role;
-        }
-    } catch (e) {
-        console.error("Error fetching user data from Firestore:", e);
-        toast({
-            variant: 'destructive',
-            title: 'Profile Error',
-            description: 'Could not fetch user profile. Using default values.',
-        });
-    }
-    
+  const handleSuccessfulLogin = async (userData: { name: string; email: string; role: string }) => {
     toast({
       title: 'Login Successful',
       description: 'Welcome back!',
     });
 
-    if (role === 'admin') {
+    if (userData.role === 'admin') {
       router.push('/admin/dashboard');
       return;
     }
 
     const queryParams = new URLSearchParams({
-        name,
-        role,
-        email: user.email!,
+        name: userData.name,
+        role: userData.role,
+        email: userData.email,
     });
 
     router.push(`/dashboard?${queryParams.toString()}`);
@@ -87,31 +54,21 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    if (!auth) {
-        toast({
-            variant: 'destructive',
-            title: 'Authentication Error',
-            description: 'Could not connect to authentication service.',
-        });
-        setIsLoading(false);
-        return;
-    }
-
     // --- DEMO MODE ---
     if (password === 'password') {
-        let demoUser: { name: string; role: string; email: string; uid?: string } | null = null;
+        let demoUser: { name: string; role: string; email: string } | null = null;
         if (email === 'admin@legalai.com') {
-            demoUser = { uid: 'demo-admin', name: 'Demo Admin', role: 'admin', email: 'admin@legalai.com' };
+            demoUser = { name: 'Demo Admin', role: 'admin', email: 'admin@legalai.com' };
         } else if (email === 'advocate@legalai.com') {
-            demoUser = { uid: 'demo-advocate', name: 'Demo Advocate', role: 'advocate', email: 'advocate@legalai.com' };
+            demoUser = { name: 'Demo Advocate', role: 'advocate', email: 'advocate@legalai.com' };
         } else if (email === 'student@legalai.com') {
-            demoUser = { uid: 'demo-student', name: 'Demo Student', role: 'student', email: 'student@legalai.com' };
+            demoUser = { name: 'Demo Student', role: 'student', email: 'student@legalai.com' };
         } else if (email === 'public@legalai.com') {
-            demoUser = { uid: 'demo-public', name: 'Demo User', role: 'public', email: 'public@legalai.com' };
+            demoUser = { name: 'Demo User', role: 'public', email: 'public@legalai.com' };
         }
 
         if (demoUser) {
-            await handleSuccessfulLogin(demoUser as User);
+            await handleSuccessfulLogin(demoUser);
             setIsLoading(false);
             return;
         }
@@ -119,10 +76,21 @@ export default function LoginPage() {
     // --- END DEMO MODE ---
 
     try {
-      const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
-      await setPersistence(auth, persistence);
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      await handleSuccessfulLogin(userCredential.user);
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      await handleSuccessfulLogin(data.user);
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -136,55 +104,15 @@ export default function LoginPage() {
 
   const handleSocialLogin = async (provider: 'google' | 'github') => {
     setSocialLoading(provider);
-    if (!auth || !db) {
-         toast({
-            variant: 'destructive',
-            title: 'Authentication Error',
-            description: 'Could not connect to authentication service.',
-        });
-        setSocialLoading(null);
-        return;
-    }
-
-    const authProvider = provider === 'google' ? new GoogleAuthProvider() : new GithubAuthProvider();
-    try {
-      const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
-      await setPersistence(auth, persistence);
-      const result = await signInWithPopup(auth, authProvider);
-      // For social logins, we create the Firestore doc if it's the first time
-      const userDocRef = doc(db, 'users', result.user.uid);
-      const userDoc = await getDoc(userDocRef);
-      if (!userDoc.exists()) {
-        await setDoc(userDocRef, {
-            uid: result.user.uid,
-            name: result.user.displayName,
-            email: result.user.email,
-            role: 'public', // Default role for social sign-ups
-            createdAt: new Date().toISOString(),
-        });
-      }
-      await handleSuccessfulLogin(result.user);
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Social Login Failed',
-        description: error.message,
-      });
-    } finally {
-      setSocialLoading(null);
-    }
+    toast({
+      variant: 'destructive',
+      title: 'Coming Soon',
+      description: `${provider === 'google' ? 'Google' : 'GitHub'} login will be available soon.`,
+    });
+    setSocialLoading(null);
   };
 
-
   const handleForgotPassword = async () => {
-    if (!auth) {
-        toast({
-            variant: 'destructive',
-            title: 'Authentication Error',
-            description: 'Could not connect to authentication service.',
-        });
-        return;
-    }
     if (!email) {
       toast({
         variant: 'destructive',
@@ -193,22 +121,10 @@ export default function LoginPage() {
       });
       return;
     }
-    setIsLoading(true);
-    try {
-      await sendPasswordResetEmail(auth, email);
-      toast({
-        title: 'Password Reset Email Sent',
-        description: 'Check your inbox for instructions to reset your password.',
-      });
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error.message,
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    toast({
+      title: 'Coming Soon',
+      description: 'Password reset functionality will be available soon.',
+    });
   };
 
   return (

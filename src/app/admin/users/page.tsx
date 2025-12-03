@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -29,11 +29,9 @@ import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal, PlusCircle, AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useUser, useFirestore, useCollection } from '@/firebase';
-import { collection } from 'firebase/firestore';
 
 type User = {
-  uid: string;
+  _id: string;
   name: string;
   email: string;
   role: 'admin' | 'advocate' | 'student' | 'public';
@@ -41,14 +39,9 @@ type User = {
 };
 
 export default function AdminUsersPage() {
-  const { user: authUser, isLoading: isAuthLoading } = useUser();
-  const firestore = useFirestore();
-  
-  const usersQuery = useMemo(() => {
-    // Only create the query if the user is authenticated and firestore is available
-    if (!firestore || !authUser) return null;
-    return collection(firestore, 'users');
-  }, [firestore, authUser]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const { data: users = [], isLoading: isUsersLoading, error } = useCollection<User>(usersQuery, {
     disabled: !authUser, // Disable the hook if there's no authenticated user
@@ -56,15 +49,30 @@ export default function AdminUsersPage() {
 
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredUsers = useMemo(() => {
-    if (!users) return [];
-    return users.filter(user =>
-      (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-  }, [users, searchTerm]);
-  
-  const isLoading = isAuthLoading || (isUsersLoading && authUser);
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/collections/users');
+        if (!response.ok) {
+          throw new Error('Failed to fetch users');
+        }
+        const data = await response.json();
+        setUsers(data.data || []);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const filteredUsers = users.filter(user =>
+    (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   return (
     <div className="flex flex-col w-full">
@@ -124,23 +132,20 @@ export default function AdminUsersPage() {
                                         <div className="flex flex-col items-center gap-2">
                                             <AlertTriangle className="h-8 w-8" />
                                             <p className="font-semibold">An Error Occurred</p>
-                                            <p className="text-sm">{error.message}</p>
-                                            <p className="text-xs text-muted-foreground mt-2">Ensure your Firestore security rules allow reads on the 'users' collection.</p>
+                                            <p className="text-sm">{error}</p>
                                         </div>
                                     </TableCell>
                                 </TableRow>
-                            ) : !authUser ? (
-                                 <TableRow>
+                            ) : filteredUsers.length === 0 ? (
+                                <TableRow>
                                     <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
-                                        <div className="flex flex-col items-center gap-2">
-                                            <AlertTriangle className="h-8 w-8" />
-                                            <p>You must be logged in as an administrator to view users.</p>
+                                        <p>No users found{searchTerm && ' matching your search'}.</p>
                                         </div>
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 filteredUsers.map(user => (
-                                    <TableRow key={user.uid}>
+                                    <TableRow key={user._id}>
                                         <TableCell className="font-medium">{user.name}</TableCell>
                                         <TableCell>{user.email}</TableCell>
                                         <TableCell>

@@ -26,9 +26,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Logo } from '@/components/icons/logo';
 import { useToast } from '@/hooks/use-toast';
-import { useFirebase } from '@/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { setDoc, doc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -43,7 +40,6 @@ const formSchema = z.object({
 export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { auth, db } = useFirebase();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -57,33 +53,26 @@ export default function RegisterPage() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    if (!auth || !db) {
-        toast({
-            variant: 'destructive',
-            title: 'Service Error',
-            description: 'Could not connect to Firebase services.',
-        });
-        setIsLoading(false);
-        return;
-    }
     try {
-      // 1. Create user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        values.email,
-        values.password
-      );
-      const user = userCredential.user;
-
-      // 2. Create user document in Firestore
-      await setDoc(doc(db, 'users', user.uid), {
-        uid: user.uid,
-        name: `${values.firstName} ${values.lastName}`,
-        email: values.email,
-        role: 'public', // Default role for new sign-ups
-        createdAt: new Date().toISOString(),
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: `${values.firstName} ${values.lastName}`,
+          email: values.email,
+          password: values.password,
+        }),
       });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
 
       toast({
         title: 'Registration Successful',
@@ -101,7 +90,6 @@ export default function RegisterPage() {
       setIsLoading(false);
     }
   }
-
   return (
     <main className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-background to-primary/10">
       <Card className="mx-auto max-w-sm w-full animate-fade-in shadow-2xl">

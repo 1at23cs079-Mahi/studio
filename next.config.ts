@@ -6,7 +6,12 @@ const nextConfig: NextConfig = {
   experimental: {
   },
   // This is required to allow the Next.js dev server to be accessed from the Firebase Studio preview.
-  allowedDevOrigins: ["*.cluster-htdgsbmflbdmov5xrjithceibm.cloudworkstations.dev", "*.cloudworkstations.dev"],
+  allowedDevOrigins: [
+    "*.cluster-htdgsbmflbdmov5xrjithceibm.cloudworkstations.dev", 
+    "*.cloudworkstations.dev",
+    "10.58.243.116",
+    "localhost"
+  ],
   typescript: {
     ignoreBuildErrors: true,
   },

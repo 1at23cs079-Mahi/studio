@@ -18,7 +18,6 @@ import { Button } from '@/components/ui/button';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useTheme } from '@/app/layout';
-import { useFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '../icons/logo';
 import { Sun, Moon, User, LogOut, LifeBuoy, Bot, PanelLeft, ChevronDown } from 'lucide-react';
@@ -40,7 +39,6 @@ export function DashboardHeader({ selectedLlm, setSelectedLlm }: { selectedLlm: 
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
   const { toggleSidebar } = useSidebar();
-  const { auth } = useFirebase();
 
   const role = searchParams.get('role') || 'public';
   const name = searchParams.get('name') || 'User';
@@ -50,9 +48,8 @@ export function DashboardHeader({ selectedLlm, setSelectedLlm }: { selectedLlm: 
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   
   const handleLogout = async () => {
-    if (!auth) return;
     try {
-      await auth.signOut();
+      await fetch('/api/auth/logout', { method: 'POST' });
       toast({
         title: 'Logged Out',
         description: 'You have been successfully logged out.',
