@@ -76,8 +76,9 @@ export default function VideoSummaryPage() {
       const videoDataUri = await fileToDataUri(file);
       const input: SummarizeVideoInput = { videoDataUri };
       
-      const stream = streamFlow('summarizeVideoFlow', input, {
-        adapterUrl: '/api/chat', // All flows are on this endpoint
+      const { output, stream } = streamFlow({
+        url: '/api/summarize-video',
+        input,
       });
 
       for await (const chunk of stream) {

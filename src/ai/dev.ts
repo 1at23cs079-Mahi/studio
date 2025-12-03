@@ -13,7 +13,7 @@ import '@/ai/flows/explain-legal-term.ts';
 import '@/ai/flows/summarize-video.ts';
 import { draftLegalDocumentFlow } from '@/ai/flows/draft-legal-document';
 
-export const_ = {
+export const flows = {
     chatPrompt,
     draftLegalDocumentFlow
 };

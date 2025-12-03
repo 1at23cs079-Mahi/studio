@@ -182,9 +182,9 @@ export function AssistantChat({ selectedLlm }: { selectedLlm: ModelId }) {
             model: selectedLlm as string,
         };
 
-        const stream = streamFlow('chatWithTools', flowInput, {
-            // By default, the adapter is at /api/genkit
-            adapterUrl: '/api/chat',
+        const { output, stream } = streamFlow({
+            url: '/api/chat',
+            input: flowInput,
         });
 
         for await (const chunk of stream) {
